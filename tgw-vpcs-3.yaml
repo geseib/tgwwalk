@@ -30,6 +30,8 @@ Mappings:
       AMI: "ami-00ee3b59e07408c27"
     "eu-west-1":
       AMI: "ami-09693313102a30b2c"
+      SSM: "com.amazonaws.eu-west-1.ssm"
+      SSMM: "com.amazonaws.eu-west-1.ssmmessages"
     "ap-northeast-3":
       AMI: "ami-00f7ef6bf92e8f916"
     "ap-northeast-2":
@@ -52,15 +54,23 @@ Mappings:
       SSMM: "com.amazonaws.eu-central-1.ssmmessages"
     "us-east-1":
       AMI: "ami-009d6802948d06e52"
+      SSM: "com.amazonaws.us-east-1.ssm"
+      SSMM: "com.amazonaws.us-east-1.ssmmessages"
     "us-east-2":
       AMI: "ami-02e680c4540db351e"
+      SSM: "com.amazonaws.us-east-2.ssm"
+      SSMM: "com.amazonaws.us-east-2.ssmmessages"
     "us-west-1":
       AMI: "ami-011b6930a81cd6aaf"
+      SSM: "com.amazonaws.us-west-1.ssm"
+      SSMM: "com.amazonaws.us-west-1.ssmmessages"
     "us-west-2":
       AMI: "ami-01bbe152bf19d0289"
+      SSM: "com.amazonaws.us-west-2.ssm"
+      SSMM: "com.amazonaws.us-west-2.ssmmessages"
 
 Resources:
-# Non-Prod 1 Resources
+  # Non-Prod 1 Resources
   VPCNP1:
     Type: AWS::EC2::VPC
     Properties:
@@ -70,8 +80,7 @@ Resources:
       InstanceTenancy: default
       Tags:
         - Key: Name
-          Value:
-            !Join ["-", [NP1, Ref: "AWS::StackName"]]
+          Value: !Join ["-", [NP1, Ref: "AWS::StackName"]]
         - Key: project
           Value: TGW-Demo
 
@@ -296,7 +305,7 @@ Resources:
         - Ref: AttachSubnetBNP1
       SecurityGroupIds:
         - Ref: EndpointSecGroupNP1
-  
+
   SSMMEndpointNP1:
     Type: AWS::EC2::VPCEndpoint
     Properties:
@@ -311,7 +320,7 @@ Resources:
       SecurityGroupIds:
         - Ref: EndpointSecGroupNP1
 
-# Non-Prod 2 Resources
+  # Non-Prod 2 Resources
   VPCNP2:
     Type: AWS::EC2::VPC
     Properties:
@@ -321,8 +330,7 @@ Resources:
       InstanceTenancy: default
       Tags:
         - Key: Name
-          Value:
-            !Join ["-", [NP2, Ref: "AWS::StackName"]]
+          Value: !Join ["-", [NP2, Ref: "AWS::StackName"]]
         - Key: project
           Value: TGW-Demo
 
@@ -547,7 +555,7 @@ Resources:
         - Ref: AttachSubnetBNP2
       SecurityGroupIds:
         - Ref: EndpointSecGroupNP2
-  
+
   SSMMEndpointNP2:
     Type: AWS::EC2::VPCEndpoint
     Properties:
@@ -562,7 +570,7 @@ Resources:
       SecurityGroupIds:
         - Ref: EndpointSecGroupNP2
 
-# Prod 1 Resources
+  # Prod 1 Resources
   VPCP1:
     Type: AWS::EC2::VPC
     Properties:
@@ -572,8 +580,7 @@ Resources:
       InstanceTenancy: default
       Tags:
         - Key: Name
-          Value:
-            !Join ["-", [P1, Ref: "AWS::StackName"]]
+          Value: !Join ["-", [P1, Ref: "AWS::StackName"]]
         - Key: project
           Value: TGW-Demo
 
@@ -798,7 +805,7 @@ Resources:
         - Ref: AttachSubnetBP1
       SecurityGroupIds:
         - Ref: EndpointSecGroupP1
-  
+
   SSMMEndpointP1:
     Type: AWS::EC2::VPCEndpoint
     Properties:
@@ -813,9 +820,7 @@ Resources:
       SecurityGroupIds:
         - Ref: EndpointSecGroupP1
 
-
-
-# Datacenter 1 Resources        
+  # Datacenter 1 Resources
   VPCDC1:
     Type: AWS::EC2::VPC
     Properties:
@@ -825,8 +830,7 @@ Resources:
       InstanceTenancy: default
       Tags:
         - Key: Name
-          Value:
-            !Join ["-", [DC1, Ref: "AWS::StackName"]]
+          Value: !Join ["-", [DC1, Ref: "AWS::StackName"]]
         - Key: project
           Value: TGW-Demo
 
@@ -970,6 +974,18 @@ Resources:
         - Key: Name
           Value: !Sub "DC1-${AWS::StackName}-Server"
 
+  DCCloud9env:
+    Type: AWS::Cloud9::EnvironmentEC2
+    Properties:
+      Description: "Cloud9 environment for the running automation"
+      AutomaticStopTimeMinutes: 60
+      InstanceType: t2.large
+      Name: !Sub "${AWS::StackName}-Workshop"
+      SubnetId: !Ref PublicSubnetADC1
+      Repositories:
+        - PathComponent: /tgwwalk
+          RepositoryUrl: https://github.com/geseib/tgwwalk
+
   AttachSubnetADC1:
     Type: AWS::EC2::Subnet
     Properties:
@@ -1051,7 +1067,7 @@ Resources:
         - Ref: AttachSubnetBDC1
       SecurityGroupIds:
         - Ref: EndpointSecGroupDC1
-  
+
   SSMMEndpointDC1:
     Type: AWS::EC2::VPCEndpoint
     Properties:
@@ -1092,7 +1108,7 @@ Resources:
         Ref: PublicSubnetRouteTableDC1
 
 Outputs:
-# Non-Prod 1 Outputs
+  # Non-Prod 1 Outputs
   VPCNP1:
     Description: "The Created VPC"
     Value: !Ref VPCNP1
@@ -1113,9 +1129,9 @@ Outputs:
     Description: "NP1 Private Route Table"
     Value: !Ref PrivateSubnetRouteTableNP1
     Export:
-      Name: !Sub "NP1-${AWS::StackName}-PrivateRouteTable" 
+      Name: !Sub "NP1-${AWS::StackName}-PrivateRouteTable"
 
-# Non-Prod 2 Outputs
+  # Non-Prod 2 Outputs
   VPCNP2:
     Description: "The Created VPC"
     Value: !Ref VPCNP2
@@ -1136,9 +1152,9 @@ Outputs:
     Description: "NP2 Private Route Table"
     Value: !Ref PrivateSubnetRouteTableNP2
     Export:
-      Name: !Sub "NP2-${AWS::StackName}-PrivateRouteTable" 
+      Name: !Sub "NP2-${AWS::StackName}-PrivateRouteTable"
 
-# Prod 1 Outputs
+  # Prod 1 Outputs
   VPCP1:
     Description: "The Created VPC"
     Value: !Ref VPCP1
@@ -1159,10 +1175,9 @@ Outputs:
     Description: "P1 Private Route Table"
     Value: !Ref PrivateSubnetRouteTableP1
     Export:
-      Name: !Sub "P1-${AWS::StackName}-PrivateRouteTable" 
+      Name: !Sub "P1-${AWS::StackName}-PrivateRouteTable"
 
-
-# Datacenter 1 Outputs      
+  # Datacenter 1 Outputs
   VPCDC1:
     Description: "The Created VPC"
     Value: !Ref VPCDC1
@@ -1184,5 +1199,3 @@ Outputs:
     Value: !Ref PrivateSubnetRouteTableDC1
     Export:
       Name: !Sub "DC1-${AWS::StackName}-PrivateRouteTable"
-
-  
