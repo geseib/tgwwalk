@@ -56,13 +56,11 @@ router bgp 65001
   address-family ipv4 unicast
     neighbor 169.254.10.1 remote-as 65000
     neighbor 169.254.10.1 timers 10 30 30
-    neighbor 169.254.10.1 default-originate
     neighbor 169.254.10.1 activate
     neighbor 169.254.10.1 soft-reconfiguration inbound
 ! To advertise additional prefixes to Amazon VPC, copy the 'network' statement
 ! and identify the prefix you wish to advertise. Make sure the prefix is present
 ! in the routing table of the device with a valid next-hop.
-    network 0.0.0.0
     Network 10.4.0.0 mask 255.255.0.0
   exit
 ip route 10.4.0.0 255.255.0.0 gig1
@@ -125,12 +123,10 @@ router bgp 65001
   address-family ipv4 unicast
     neighbor 169.254.11.1 remote-as 65000
     neighbor 169.254.11.1 timers 10 30 30
-    neighbor 169.254.11.1 default-originate
     neighbor 169.254.11.1 activate
     neighbor 169.254.11.1 soft-reconfiguration inbound
 ! To advertise additional prefixes to Amazon VPC, copy the 'network' statement
 ! and identify the prefix you wish to advertise. Make sure the prefix is present
 ! in the routing table of the device with a valid next-hop.
-    network 0.0.0.0
     Network 10.4.0.0 mask 255.255.0.0
   exit
