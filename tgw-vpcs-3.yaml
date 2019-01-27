@@ -1,5 +1,5 @@
 AWSTemplateFormatVersion: "2010-09-09"
-Description: "4 VPC in 2AZs using 10.x.0.0/16:"
+Description: "5 VPC in 2AZs using 10.x.0.0/16:"
 
 Metadata:
   "AWS::CloudFormation::Interface":
@@ -24,10 +24,16 @@ Mappings:
   RegionMap:
     "ap-south-1":
       AMI: "ami-00796998f258969fd"
+      SSM: "com.amazonaws.ap-south-1.ssm"
+      SSMM: "com.amazonaws.ap-south-1.ssmmessages"
     "eu-west-3":
       AMI: "ami-04992646d54c69ef4"
+      SSM: "com.amazonaws.eu-west-3.ssm"
+      SSMM: "com.amazonaws.eu-west-3.ssmmessages"
     "eu-west-2":
       AMI: "ami-00ee3b59e07408c27"
+      SSM: "com.amazonaws.eu-west-2.ssm"
+      SSMM: "com.amazonaws.eu-west-2.ssmmessages"
     "eu-west-1":
       AMI: "ami-09693313102a30b2c"
       SSM: "com.amazonaws.eu-west-1.ssm"
@@ -42,6 +48,8 @@ Mappings:
       AMI: "ami-0112d42866980b373"
     "ca-central-1":
       AMI: "ami-05cac140c6a1fb960"
+      SSM: "com.amazonaws.ca-central-1.ssm"
+      SSMM: "com.amazonaws.ca-central-1.ssmmessages"
     "ap-southeast-1":
       AMI: "ami-01da99628f381e50a"
     "ap-southeast-2":
@@ -210,6 +218,23 @@ Resources:
       Roles:
         - !Ref ServerRoleNP1
 
+  NP1Ec2SecGroup:
+    Type: AWS::EC2::SecurityGroup
+    Properties:
+      GroupDescription: Open-up ports for ICMP and SSH from 10.x.x.x
+      GroupName: !Join ["-", [NP1, Ref: "AWS::StackName", "EC2-sec-group"]]
+      VpcId:
+        Ref: VPCNP1
+      SecurityGroupIngress:
+        - IpProtocol: icmp
+          CidrIp: 10.0.0.0/16
+          FromPort: "8"
+          ToPort: "8"
+        - IpProtocol: tcp
+          FromPort: "22"
+          ToPort: "22"
+          CidrIp: 10.4.0.0/16
+
   ServerEc2NP1:
     Type: AWS::EC2::Instance
     DependsOn: PrivateSubnetBNP1
@@ -218,6 +243,8 @@ Resources:
         Ref: PrivateSubnetBNP1
       ImageId: !FindInMap [RegionMap, !Ref "AWS::Region", AMI]
       InstanceType: t2.large
+      SecurityGroupIds:
+        - Ref: NP1Ec2SecGroup
       IamInstanceProfile:
         Ref: InstanceProfileNP1
       Tags:
@@ -459,6 +486,23 @@ Resources:
       Path: "/"
       Roles:
         - !Ref ServerRoleNP2
+ 
+  NP2Ec2SecGroup:
+    Type: AWS::EC2::SecurityGroup
+    Properties:
+      GroupDescription: Open-up ports for ICMP and SSH from 10.x.x.x
+      GroupName: !Join ["-", [NP2, Ref: "AWS::StackName", "EC2-sec-group"]]
+      VpcId:
+        Ref: VPCNP2
+      SecurityGroupIngress:
+        - IpProtocol: icmp
+          CidrIp: 10.0.0.0/8
+          FromPort: "8"
+          ToPort: "8"
+        - IpProtocol: tcp
+          FromPort: "22"
+          ToPort: "22"
+          CidrIp: 10.4.0.0/16
 
   ServerEc2NP2:
     Type: AWS::EC2::Instance
@@ -468,6 +512,8 @@ Resources:
         Ref: PrivateSubnetBNP2
       ImageId: !FindInMap [RegionMap, !Ref "AWS::Region", AMI]
       InstanceType: t2.large
+      SecurityGroupIds:
+        - Ref: NP2Ec2SecGroup
       IamInstanceProfile:
         Ref: InstanceProfileNP2
       Tags:
@@ -959,6 +1005,23 @@ Resources:
       Path: "/"
       Roles:
         - !Ref ServerRoleDC
+  
+  DC1Ec2SecGroup:
+    Type: AWS::EC2::SecurityGroup
+    Properties:
+      GroupDescription: Open-up ports for ICMP and SSH from 10.x.x.x
+      GroupName: !Join ["-", [DC1, Ref: "AWS::StackName", "EC2-sec-group"]]
+      VpcId:
+        Ref: VPCDC1
+      SecurityGroupIngress:
+        - IpProtocol: icmp
+          CidrIp: 10.0.0.0/16
+          FromPort: "8"
+          ToPort: "8"
+        - IpProtocol: tcp
+          FromPort: "22"
+          ToPort: "22"
+          CidrIp: 10.4.0.0/16
 
   ServerEc2DC1:
     Type: AWS::EC2::Instance
@@ -968,6 +1031,8 @@ Resources:
         Ref: PrivateSubnetBDC1
       ImageId: !FindInMap [RegionMap, !Ref "AWS::Region", AMI]
       InstanceType: t2.large
+      SecurityGroupIds:
+        - Ref: DC1Ec2SecGroup
       IamInstanceProfile:
         Ref: InstanceProfileDC
       Tags:
@@ -1107,6 +1172,331 @@ Resources:
       RouteTableId:
         Ref: PublicSubnetRouteTableDC1
 
+  # DataCenter Services 1 Resources
+  # This VPC holds shared Services for all 
+  VPCDCS1:
+    Type: AWS::EC2::VPC
+    Properties:
+      CidrBlock: "10.0.0.0/16"
+      EnableDnsSupport: "true"
+      EnableDnsHostnames: "true"
+      InstanceTenancy: default
+      Tags:
+        - Key: Name
+          Value: !Join ["-", [DCS1, Ref: "AWS::StackName"]]
+        - Key: project
+          Value: TGW-Demo
+
+  PublicSubnetADCS1:
+    Type: AWS::EC2::Subnet
+    Properties:
+      VpcId:
+        Ref: VPCDCS1
+      CidrBlock: "10.0.0.0/22"
+      AvailabilityZone:
+        Ref: AvailabilityZoneA
+      MapPublicIpOnLaunch: true
+      Tags:
+        - Key: Name
+          Value: !Join ["-", [DCS1, Ref: "AWS::StackName", Pub-A Subnet]]
+
+  PublicSubnetBDCS1:
+    Type: AWS::EC2::Subnet
+    Properties:
+      VpcId:
+        Ref: VPCDCS1
+      CidrBlock: "10.0.4.0/22"
+      AvailabilityZone:
+        Ref: AvailabilityZoneB
+      MapPublicIpOnLaunch: true
+      Tags:
+        - Key: Name
+          Value: !Join ["-", [DCS1, Ref: "AWS::StackName", Pub-B Subnet]]
+
+  PublicSubnetRouteTableDCS1:
+    Type: AWS::EC2::RouteTable
+    Properties:
+      VpcId:
+        Ref: VPCDCS1
+      Tags:
+        - Key: Name
+          Value: !Join ["-", [DCS1, Ref: "AWS::StackName", Public Route Table]]
+
+  PublicASubnetRouteTableAssociationDCS1:
+    Type: AWS::EC2::SubnetRouteTableAssociation
+    Properties:
+      RouteTableId:
+        Ref: PublicSubnetRouteTableDCS1
+      SubnetId:
+        Ref: PublicSubnetADCS1
+
+  PublicBSubnetRouteTableAssociationDCS1:
+    Type: AWS::EC2::SubnetRouteTableAssociation
+    Properties:
+      RouteTableId:
+        Ref: PublicSubnetRouteTableDCS1
+      SubnetId:
+        Ref: PublicSubnetBDCS1
+
+  PrivateSubnetADCS1:
+    Type: AWS::EC2::Subnet
+    Properties:
+      VpcId:
+        Ref: VPCDCS1
+      CidrBlock: "10.0.8.0/21"
+      AvailabilityZone:
+        Ref: AvailabilityZoneA
+      MapPublicIpOnLaunch: false
+      Tags:
+        - Key: Name
+          Value: !Join ["-", [DCS1, Ref: "AWS::StackName", Priv-A Subnet]]
+
+  PrivateSubnetBDCS1:
+    Type: AWS::EC2::Subnet
+    Properties:
+      VpcId:
+        Ref: VPCDCS1
+      CidrBlock: "10.0.16.0/21"
+      AvailabilityZone:
+        Ref: AvailabilityZoneB
+      MapPublicIpOnLaunch: false
+      Tags:
+        - Key: Name
+          Value: !Join ["-", [DCS1, Ref: "AWS::StackName", Priv-B Subnet]]
+
+  PrivateSubnetRouteTableDCS1:
+    Type: AWS::EC2::RouteTable
+    Properties:
+      VpcId:
+        Ref: VPCDCS1
+      Tags:
+        - Key: Name
+          Value: !Join ["-", [DCS1, Ref: "AWS::StackName", Private Route Table]]
+
+  PrivateASubnetRouteTableAssociationDCS1:
+    Type: AWS::EC2::SubnetRouteTableAssociation
+    Properties:
+      RouteTableId:
+        Ref: PrivateSubnetRouteTableDCS1
+      SubnetId:
+        Ref: PrivateSubnetADCS1
+
+  PrivateBSubnetRouteTableAssociationDCS1:
+    Type: AWS::EC2::SubnetRouteTableAssociation
+    Properties:
+      RouteTableId:
+        Ref: PrivateSubnetRouteTableDCS1
+      SubnetId:
+        Ref: PrivateSubnetBDCS1
+
+  ServerRoleDCS1:
+    Type: AWS::IAM::Role
+    Properties:
+      RoleName: !Join ["-", [DCS1, Ref: "AWS::StackName", "SSMRole"]]
+      Path: "/"
+      ManagedPolicyArns:
+        - "arn:aws:iam::aws:policy/service-role/AmazonEC2RoleforSSM"
+      AssumeRolePolicyDocument:
+        Version: "2012-10-17"
+        Statement:
+          - Effect: Allow
+            Principal:
+              Service:
+                - ec2.amazonaws.com
+            Action:
+              - sts:AssumeRole
+
+  InstanceProfileDCS1:
+    Type: AWS::IAM::InstanceProfile
+    Properties:
+      Path: "/"
+      Roles:
+        - !Ref ServerRoleDCS1
+
+  DCS1Ec2SecGroup:
+    Type: AWS::EC2::SecurityGroup
+    Properties:
+      GroupDescription: Open-up ports for ICMP and SSH from 10.x.x.x
+      GroupName: !Join ["-", [DCS1, Ref: "AWS::StackName", "EC2-sec-group"]]
+      VpcId:
+        Ref: VPCDCS1
+      SecurityGroupIngress:
+        - IpProtocol: icmp
+          CidrIp: 10.0.0.0/16
+          FromPort: "8"
+          ToPort: "8"
+        - IpProtocol: tcp
+          FromPort: "22"
+          ToPort: "22"
+          CidrIp: 10.4.0.0/16
+
+  ServerEc2DCS1:
+    Type: AWS::EC2::Instance
+    DependsOn: PrivateSubnetBDCS1
+    Properties:
+      SubnetId:
+        Ref: PrivateSubnetBDCS1
+      ImageId: !FindInMap [RegionMap, !Ref "AWS::Region", AMI]
+      InstanceType: t2.large
+      SecurityGroupIds:
+        - Ref: DCS1Ec2SecGroup
+      IamInstanceProfile:
+        Ref: InstanceProfileDCS1
+      Tags:
+        - Key: Name
+          Value: !Sub "DCS1-${AWS::StackName}-Server"
+
+  AttachSubnetADCS1:
+    Type: AWS::EC2::Subnet
+    Properties:
+      VpcId:
+        Ref: VPCDCS1
+      CidrBlock: "10.0.24.0/24"
+      AvailabilityZone:
+        Ref: AvailabilityZoneA
+      MapPublicIpOnLaunch: false
+      Tags:
+        - Key: Name
+          Value: !Join ["-", [DCS1, Ref: "AWS::StackName", Attach-A Subnet]]
+
+  AttachSubnetBDCS1:
+    Type: AWS::EC2::Subnet
+    Properties:
+      VpcId:
+        Ref: VPCDCS1
+      CidrBlock: "10.0.25.0/24"
+      AvailabilityZone:
+        Ref: AvailabilityZoneB
+      MapPublicIpOnLaunch: false
+      Tags:
+        - Key: Name
+          Value: !Join ["-", [DCS1, Ref: "AWS::StackName", Attach-B Subnet]]
+
+  AttachSubnetRouteTableDCS1:
+    Type: AWS::EC2::RouteTable
+    Properties:
+      VpcId:
+        Ref: VPCDCS1
+      Tags:
+        - Key: Name
+          Value: !Join ["-", [DCS1, Ref: "AWS::StackName", Attach Route Table]]
+
+  AttachASubnetRouteTableAssociationDCS1:
+    Type: AWS::EC2::SubnetRouteTableAssociation
+    Properties:
+      RouteTableId:
+        Ref: AttachSubnetRouteTableDCS1
+      SubnetId:
+        Ref: AttachSubnetADCS1
+
+  AttachBSubnetRouteTableAssociationDCS1:
+    Type: AWS::EC2::SubnetRouteTableAssociation
+    Properties:
+      RouteTableId:
+        Ref: AttachSubnetRouteTableDCS1
+      SubnetId:
+        Ref: AttachSubnetBDCS1
+
+  EndpointSecGroupDCS1:
+    Type: AWS::EC2::SecurityGroup
+    Properties:
+      GroupDescription: Open-up ports for local VPC
+      GroupName: !Join ["-", [DCS1, Ref: "AWS::StackName", "vpc-sec-group"]]
+      VpcId:
+        Ref: VPCDCS1
+      SecurityGroupIngress:
+        - IpProtocol: tcp
+          FromPort: "1"
+          ToPort: "65535"
+          CidrIp: 10.0.0.0/16
+        - IpProtocol: udp
+          FromPort: "1"
+          ToPort: "65535"
+          CidrIp: 10.0.0.0/16
+
+  SSMEndpointDCS1:
+    Type: AWS::EC2::VPCEndpoint
+    Properties:
+      VpcId:
+        Ref: VPCDCS1
+      ServiceName: !FindInMap [RegionMap, !Ref "AWS::Region", SSM]
+      VpcEndpointType: Interface
+      PrivateDnsEnabled: True
+      SubnetIds:
+        - Ref: AttachSubnetADCS1
+        - Ref: AttachSubnetBDCS1
+      SecurityGroupIds:
+        - Ref: EndpointSecGroupDCS1
+
+  SSMMEndpointDCS1:
+    Type: AWS::EC2::VPCEndpoint
+    Properties:
+      VpcId:
+        Ref: VPCDCS1
+      ServiceName: !FindInMap [RegionMap, !Ref "AWS::Region", SSMM]
+      VpcEndpointType: Interface
+      PrivateDnsEnabled: True
+      SubnetIds:
+        - Ref: AttachSubnetADCS1
+        - Ref: AttachSubnetBDCS1
+      SecurityGroupIds:
+        - Ref: EndpointSecGroupDCS1
+
+  DCS1InternetGateway:
+    Type: AWS::EC2::InternetGateway
+    Properties:
+      Tags:
+        - Key: Name
+          Value: !Join ["-", [DCS1, "AWS::StackName", IGW]]
+
+  AttachGateway:
+    Type: AWS::EC2::VPCGatewayAttachment
+    Properties:
+      VpcId:
+        Ref: VPCDCS1
+      InternetGatewayId:
+        Ref: DCS1InternetGateway
+
+  DCS1DirectInternetRoute:
+    Type: AWS::EC2::Route
+    DependsOn: DCS1InternetGateway
+    Properties:
+      DestinationCidrBlock: 0.0.0.0/0
+      GatewayId:
+        Ref: DCS1InternetGateway
+      RouteTableId:
+        Ref: PublicSubnetRouteTableDCS1
+
+  DCS1NATEIP:
+    Type: "AWS::EC2::EIP"
+    Properties:
+      Domain: vpc
+
+  DCS1NATGateway:
+    DependsOn: AttachGateway
+    Type: "AWS::EC2::NatGateway"
+    Properties:
+      AllocationId:
+        Fn::GetAtt:
+          - DCS1NATEIP
+          - AllocationId
+      SubnetId:
+        Ref: PublicSubnetADCS1
+      Tags:
+        - Key: Name
+          Value: !Join ["-", [DCS1, "AWS::StackName", NATGW]]
+
+  
+  DCS1NATInternetRoute:
+    Type: AWS::EC2::Route
+    DependsOn: DCS1InternetGateway
+    Properties:
+      DestinationCidrBlock: 0.0.0.0/0
+      NatGatewayId:
+        Ref: DCS1NATGateway
+      RouteTableId:
+        Ref: AttachSubnetRouteTableDCS1
+
 Outputs:
   # Non-Prod 1 Outputs
   VPCNP1:
@@ -1183,6 +1573,14 @@ Outputs:
     Value: !Ref VPCDC1
     Export:
       Name: !Sub "DC1-${AWS::StackName}-VPC"
+  
+  DC1ServerSession:
+    Description: session command for Server
+    Value:
+      Fn::Join:
+        - " "
+        - - "aws ssm start-session --target"
+          - !Ref ServerEc2DC1
 
   PublicSubnetADC1:
     Description: "DC1 Public Subnet A"
@@ -1194,8 +1592,41 @@ Outputs:
     Value: !Ref PublicSubnetBDC1
     Export:
       Name: !Sub "DC1-${AWS::StackName}-PublicSubnetB"
+  PrivateSubnetADC1:
+    Description: "DC1 Private Subnet A"
+    Value: !Ref PrivateSubnetADC1
+    Export:
+      Name: !Sub "DC1-${AWS::StackName}-PrivateSubnetA"
+  PrivateSubnetADC1:
+    Description: "DC1 Private Subnet B"
+    Value: !Ref PrivateSubnetBDC1
+    Export:
+      Name: !Sub "DC1-${AWS::StackName}-PrivateSubnetA"
   PrivateSubnetRouteTableDC1:
     Description: "NP1 Private Route Table"
     Value: !Ref PrivateSubnetRouteTableDC1
     Export:
       Name: !Sub "DC1-${AWS::StackName}-PrivateRouteTable"
+
+# Datacenter Services 1 Outputs
+  VPCDCS1:
+    Description: "Datacenter Services VPC"
+    Value: !Ref VPCDCS1
+    Export:
+      Name: !Sub "DCS1-${AWS::StackName}-VPC"
+
+  AttachSubnetADCS11:
+    Description: "DCS1 Attach Subnet A"
+    Value: !Ref AttachSubnetADCS1
+    Export:
+      Name: !Sub "DCS1-${AWS::StackName}-AttachSubnetA"
+  AttachSubnetBDCS1:
+    Description: "DCS1 Attach Subnet B"
+    Value: !Ref AttachSubnetBDCS1
+    Export:
+      Name: !Sub "DCS1-${AWS::StackName}-AttachSubnetB"
+  PrivateSubnetRouteTableDCS1:
+    Description: "DCS1 Private Route Table"
+    Value: !Ref PrivateSubnetRouteTableDCS1
+    Export:
+      Name: !Sub "DCS1-${AWS::StackName}-PrivateRouteTable"

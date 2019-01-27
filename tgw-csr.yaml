@@ -297,6 +297,60 @@ Resources:
       TransitGatewayAttachmentId: !Ref AttachP1
       TransitGatewayRouteTableId: !Ref RouteTableGreen
 
+  # Datacenter Services 1 Connect to the Transit Gateway
+  AttachDCS1:
+    Type: "AWS::EC2::TransitGatewayAttachment"
+    Properties:
+      SubnetIds:
+        - Fn::ImportValue: !Sub "DCS1-${ParentStack}-AttachSubnetA"
+        - Fn::ImportValue: !Sub "DCS1-${ParentStack}-AttachSubnetB"
+      Tags:
+        - Key: Name
+          Value: DCS1Attach
+      TransitGatewayId: !Ref TransitGateway
+      VpcId:
+        Fn::ImportValue: !Sub "DCS1-${ParentStack}-VPC"
+
+  AssociateDCS1RouteTable:
+    Type: "AWS::EC2::TransitGatewayRouteTableAssociation"
+    Properties:
+      TransitGatewayAttachmentId: !Ref AttachDCS1
+      TransitGatewayRouteTableId: !Ref RouteTableGreen
+
+  PropagateDCS1Red:
+    Type: "AWS::EC2::TransitGatewayRouteTablePropagation"
+    Properties:
+      TransitGatewayAttachmentId: !Ref AttachDCS1
+      TransitGatewayRouteTableId: !Ref RouteTableRed
+
+  PropagateDCS1Blue:
+    Type: "AWS::EC2::TransitGatewayRouteTablePropagation"
+    Properties:
+      TransitGatewayAttachmentId: !Ref AttachDCS1
+      TransitGatewayRouteTableId: !Ref RouteTableBlue
+
+  PropagateP1Green:
+    Type: "AWS::EC2::TransitGatewayRouteTablePropagation"
+    Properties:
+      TransitGatewayAttachmentId: !Ref AttachDCS1
+      TransitGatewayRouteTableId: !Ref RouteTableGreen
+
+  DefaultRouteRed:
+    Type: "AWS::EC2::TransitGatewayRoute"
+    Properties:
+      DestinationCidrBlock: 0.0.0.0/0
+      TransitGatewayAttachmentId: !Ref AttachDCS1
+      TransitGatewayRouteTableId: !Ref RouteTableRed
+
+  DefaultRouteBlue:
+    Type: "AWS::EC2::TransitGatewayRoute"
+    Properties:
+      DestinationCidrBlock: 0.0.0.0/0
+      TransitGatewayAttachmentId: !Ref AttachDCS1
+      TransitGatewayRouteTableId: !Ref RouteTableBlue
+
+
+
 Outputs:
   # Datacenter 1 Outputs
   CSRSSH:

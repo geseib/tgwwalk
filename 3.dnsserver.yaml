@@ -1,0 +1,146 @@
+AWSTemplateFormatVersion: 2010-09-09
+Description: "Bind EC2 Instances Deployed into a VPC Created by 1.vpc-dns.yaml"
+Parameters:
+  VPCName:
+    Description: "Stack name of parent VPC stack."
+    Type: String
+
+Mappings:
+  RegionMap:
+    "ap-south-1":
+      AMI: "ami-00796998f258969fd"
+    "eu-west-3":
+      AMI: "ami-04992646d54c69ef4"
+    "eu-west-2":
+      AMI: "ami-00ee3b59e07408c27"
+    "eu-west-1":
+      AMI: "ami-09693313102a30b2c"
+    "ap-northeast-3":
+      AMI: "ami-00f7ef6bf92e8f916"
+    "ap-northeast-2":
+      AMI: "ami-012566705322e9a8e"
+    "ap-northeast-1":
+      AMI: "ami-00f9d04b3b3092052"
+    "sa-east-1":
+      AMI: "ami-0112d42866980b373"
+    "ca-central-1":
+      AMI: "ami-05cac140c6a1fb960"
+    "ap-southeast-1":
+      AMI: "ami-01da99628f381e50a"
+    "ap-southeast-2":
+      AMI: "ami-00e17d1165b9dd3ec"
+    "eu-central-1":
+      AMI: "ami-02ea8f348fa28c108"
+    "us-east-1":
+      AMI: "ami-009d6802948d06e52"
+    "us-east-2":
+      AMI: "ami-02e680c4540db351e"
+    "us-west-1":
+      AMI: "ami-011b6930a81cd6aaf"
+    "us-west-2":
+      AMI: "ami-01bbe152bf19d0289"
+
+Resources:
+  DNSServerRole:
+    Type: AWS::IAM::Role
+    Properties:
+      RoleName: !Join ["-", [Ref: "AWS::StackName", "SSMRole"]]
+      Path: "/"
+      ManagedPolicyArns:
+        - "arn:aws:iam::aws:policy/service-role/AmazonEC2RoleforSSM"
+      AssumeRolePolicyDocument:
+        Version: "2012-10-17"
+        Statement:
+          - Effect: Allow
+            Principal:
+              Service:
+                - ec2.amazonaws.com
+            Action:
+              - sts:AssumeRole
+  DNSInstanceProfile:
+    Type: AWS::IAM::InstanceProfile
+    Properties:
+      Path: "/"
+      Roles:
+        - !Ref DNSServerRole
+  BindSecGroup:
+    Type: AWS::EC2::SecurityGroup
+    Properties:
+      GroupDescription: Open-up ports for bind
+      GroupName: !Join ["-", [Ref: "AWS::StackName", "dns-sec-group"]]
+      VpcId:
+        Fn::ImportValue: !Sub "DC1-${VPCName}-VPC"
+      SecurityGroupIngress:
+        - IpProtocol: tcp
+          FromPort: "53"
+          ToPort: "53"
+          CidrIp: 10.0.0.0/0
+        - IpProtocol: udp
+          FromPort: "53"
+          ToPort: "53"
+          CidrIp: 10.0.0.0/0
+  BindEc2:
+    Type: AWS::EC2::Instance
+    Properties:
+      SubnetId:
+        "Fn::ImportValue": !Sub "DC1-${VPCName}-PublicSubnetA"
+      SecurityGroupIds:
+        - Ref: BindSecGroup
+      ImageId: !FindInMap [RegionMap, !Ref "AWS::Region", AMI]
+      InstanceType: t2.large
+      IamInstanceProfile:
+        Ref: DNSInstanceProfile
+      UserData:
+        Fn::Base64:
+          Fn::Join:
+            - ""
+            - - "#!/bin/bash\n"
+              - "yum install -y bind bind-libs bind-utils\n"
+              - "chkconfig named on\n"
+              - "cp  /etc/named.conf /etc/named.conf.Bk\n"
+              - "echo >  /etc/named.conf\n"
+              - "cat << 'EOF' >> /etc/named.conf\n"
+              - "options {\n"
+              - " directory \"/var/named\";\n"
+              - " version \"not currently available\";\n"
+              - "# Listen to the loopback device only\n"
+              - " listen-on { any; };\n"
+              - " listen-on-v6 { ::1; };\n"
+              - "# Do not query from the specified source port range\n"
+              - "# (Adjust depending your firewall configuration)\n"
+              - " avoid-v4-udp-ports { range 1 32767; };\n"
+              - " avoid-v6-udp-ports { range 1 32767; };\n"
+              - "# Forward all DNS queries to the Google Public DNS.\n"
+              - " forwarders { 8.8.8.8;4.2.2.5; };\n"
+              - " forward only;\n"
+              - "# Expire negative answer ASAP.\n"
+              - "# i.e. Do not cache DNS query failure.\n"
+              - " max-ncache-ttl 1200; # 3 seconds\n"
+              - "# Disable non-relevant operations\n"
+              - " allow-transfer { none; };\n"
+              - " allow-update-forwarding { none; };\n"
+              - " allow-notify { none; };\n"
+              - " allow-recursion { any; };\n"
+              - "};\n"
+              - "EOF\n"
+              - "systemctl start named\n"
+      Tags:
+        - Key: Name
+          Value:
+            Ref: "AWS::StackName"
+
+Outputs:
+  BindSession:
+    Description: session command
+    Value:
+      Fn::Join:
+        - " "
+        - - "aws ssm start-session --target"
+          - !Ref BindEc2
+    Export:
+      Name: !Sub "${VPCName}-bind-session"
+  BindIP:
+    Description: BindServer Ip Address
+    Value: !GetAtt BindEc2.PrivateIp
+    Export:
+      Name: !Sub "${VPCName}-nameServerIP"
