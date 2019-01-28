@@ -4,14 +4,14 @@ This walkthrough shows how to setup Transit Gateway with multiple VPC and Routin
 
 ![Speficy Details Screenshot](./images/hybrid-diagram.png)
 
-1. Run Cloudformation template tgw-vpcs-3.yaml
-2. Run Cloudformation template tgw-csr.yaml. Be sure to use the stack name used in step one for the 'Parent Stack'.
+1. Run Cloudformation template 1.tgw-vpcs.yaml
+2. Run Cloudformation template 2.tgw-csr.yaml. Be sure to use the stack name used in step one for the 'Parent Stack'.
 3. Create TGW attachment for VPN.
 
-- use 169.254.10.0/30 and 169.254.11.0/30 for CIDR
+- use 169.254.10.0/30 and 169.254.11.0/30 for CIDR.
 - use awsamazon for custom settings
 
-4. using the two VPN tunnel endpoint address generated from step 3, run the bash script, createcsr.sh.
+4. using the two VPN tunnel endpoint address generated from step 3, run the bash script, createcsr.sh. Be sure to check the console VPC Service. Under Site-to-Site VPN tunnel detail find the addresses. Be sure to put the address that lines up with Inside IP CIDR address 169.254.10.0/30 for ip1.
 
 ```
 ./createcsr.sh ip1 ip2 outputfile
@@ -26,6 +26,7 @@ config t
 ```
 
 7. paste in the text from the outputfile created in step 4.
+8. Launch a Bind DNS server into the Datacenter (DC1 VPC) using the cloudformation template 3.tgw-dns.yaml
 
 # To Do:
 
