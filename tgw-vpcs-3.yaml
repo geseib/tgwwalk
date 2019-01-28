@@ -228,8 +228,8 @@ Resources:
       SecurityGroupIngress:
         - IpProtocol: icmp
           CidrIp: 10.0.0.0/16
-          FromPort: "8"
-          ToPort: "8"
+          FromPort: "-1"
+          ToPort: "-1"
         - IpProtocol: tcp
           FromPort: "22"
           ToPort: "22"
