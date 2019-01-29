@@ -329,7 +329,7 @@ Resources:
       TransitGatewayAttachmentId: !Ref AttachDCS1
       TransitGatewayRouteTableId: !Ref RouteTableBlue
 
-  PropagateP1Green:
+  PropagateDCS1Green:
     Type: "AWS::EC2::TransitGatewayRouteTablePropagation"
     Properties:
       TransitGatewayAttachmentId: !Ref AttachDCS1
@@ -348,8 +348,6 @@ Resources:
       DestinationCidrBlock: 0.0.0.0/0
       TransitGatewayAttachmentId: !Ref AttachDCS1
       TransitGatewayRouteTableId: !Ref RouteTableBlue
-
-
 
 Outputs:
   # Datacenter 1 Outputs
