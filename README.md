@@ -76,7 +76,7 @@ Since we will be deploying Cloud9 into our Datacenter VPC, we need to pick one o
 </p>
 </details>
 
-### 1. Deploy Our Five VPCs
+### 2. Deploy Our Five VPCs
 
 Run Cloudformation template 1.tgw-vpcs.yaml to deploy the VPCs.
 
@@ -90,26 +90,27 @@ Run Cloudformation template 1.tgw-vpcs.yaml to deploy the VPCs.
 1. In the main panel select **Create Stack** in the upper right hand corner.<p>
    ![Create Stack button](./images/createStack.png)
 
-1) Make sure **Template is ready** is selected from Prepare teplate options.
+1. Make sure **Template is ready** is selected from Prepare teplate options.
 
-1) At the **Prerequisite - Prepare template** screen, for **template source** select **Upload a template file** and click **Choose file** from **Upload a Template file**. from your local files select **1.tgw-vpcs.yaml** and click **Open**.
+1. At the **Prerequisite - Prepare template** screen, for **template source** select **Upload a template file** and click **Choose file** from **Upload a Template file**. from your local files select **1.tgw-vpcs.yaml** and click **Open**.
 
-1) Back at the **Prerequisite - Prepare template** screen, clcik **Next** in the lower right.
+1. Back at the **Prerequisite - Prepare template** screen, clcik **Next** in the lower right.
 
-1) For the **Specify stack details** give the stack a name (be sure to record this, as you will need it later) and Select two Availability Zones (AZs) to deploy to. \*We will be deploying all of the VPCs in the same AZs, but that is not required. Click **Next**.
+1. For the **Specify stack details** give the stack a name (be sure to record this, as you will need it later) and Select two Availability Zones (AZs) to deploy to. \*We will be deploying all of the VPCs in the same AZs, but that is not required. Click **Next**.
    ![Create Stack button](./images/createStack-VPCparameters.png)
-1) For **Configuration stack options** we dont need to change anything, so just click **Next** in the bottom right.
 
-1) Scroll down to the bottom of the **Review name_of_youstack** and check the **I acknowledge the AWS CloudFormation might create IAM resourcfes with custom names.**.
+1. For **Configuration stack options** we dont need to change anything, so just click **Next** in the bottom right.
+
+1. Scroll down to the bottom of the **Review name_of_youstack** and check the **I acknowledge the AWS CloudFormation might create IAM resourcfes with custom names.**.
    ![Create Stack button](./images/createStack-VPCiam.png)
 
-1) wait for the Stack to show **Create_Complete**.
-   ![Create Stack button](./images/createStack-VPCcomplete.png)
+1. wait for the Stack to show **Create_Complete**.
+   ![Create Stack button](./images/createStack-VPCComplete.png)
 
    </p>
    </details>
 
-### 1. Create Transit Gateway and Datacenter Router
+### 3. Create Transit Gateway and Datacenter Router
 
 1. Run Cloudformation template 2.tgw-csr.yaml. Be sure to use the stack name used in step one for the 'Parent Stack'.
 1. Create TGW attachment for VPN.
