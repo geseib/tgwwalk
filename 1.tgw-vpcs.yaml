@@ -242,7 +242,7 @@ Resources:
       SubnetId:
         Ref: PrivateSubnetBNP1
       ImageId: !FindInMap [RegionMap, !Ref "AWS::Region", AMI]
-      InstanceType: t2.large
+      InstanceType: t3.micro
       SecurityGroupIds:
         - Ref: NP1Ec2SecGroup
       IamInstanceProfile:
@@ -511,7 +511,7 @@ Resources:
       SubnetId:
         Ref: PrivateSubnetBNP2
       ImageId: !FindInMap [RegionMap, !Ref "AWS::Region", AMI]
-      InstanceType: t2.large
+      InstanceType: t3.micro
       SecurityGroupIds:
         - Ref: NP2Ec2SecGroup
       IamInstanceProfile:
@@ -763,7 +763,7 @@ Resources:
       SubnetId:
         Ref: PrivateSubnetBP1
       ImageId: !FindInMap [RegionMap, !Ref "AWS::Region", AMI]
-      InstanceType: t2.large
+      InstanceType: t3.micro
       IamInstanceProfile:
         Ref: InstanceProfileP1
       Tags:
@@ -1015,7 +1015,7 @@ Resources:
         Ref: VPCDC1
       SecurityGroupIngress:
         - IpProtocol: icmp
-          CidrIp: 10.0.0.0/16
+          CidrIp: 10.0.0.0/8
           FromPort: "8"
           ToPort: "8"
         - IpProtocol: tcp
@@ -1030,7 +1030,7 @@ Resources:
       SubnetId:
         Ref: PrivateSubnetBDC1
       ImageId: !FindInMap [RegionMap, !Ref "AWS::Region", AMI]
-      InstanceType: t2.large
+      InstanceType: t3.micro
       SecurityGroupIds:
         - Ref: DC1Ec2SecGroup
       IamInstanceProfile:
@@ -1044,7 +1044,7 @@ Resources:
     Properties:
       Description: "Cloud9 environment for the running automation"
       AutomaticStopTimeMinutes: 60
-      InstanceType: t2.large
+      InstanceType: t3.large
       Name: !Sub "${AWS::StackName}-Workshop"
       SubnetId: !Ref PublicSubnetADC1
       Repositories:
@@ -1337,7 +1337,7 @@ Resources:
       SubnetId:
         Ref: PrivateSubnetBDCS1
       ImageId: !FindInMap [RegionMap, !Ref "AWS::Region", AMI]
-      InstanceType: t2.large
+      InstanceType: t3.micro
       SecurityGroupIds:
         - Ref: DCS1Ec2SecGroup
       IamInstanceProfile:
