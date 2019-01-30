@@ -227,7 +227,7 @@ Resources:
         Ref: VPCNP1
       SecurityGroupIngress:
         - IpProtocol: icmp
-          CidrIp: 10.0.0.0/16
+          CidrIp: 10.0.0.0/8
           FromPort: "-1"
           ToPort: "-1"
         - IpProtocol: tcp
@@ -497,8 +497,8 @@ Resources:
       SecurityGroupIngress:
         - IpProtocol: icmp
           CidrIp: 10.0.0.0/8
-          FromPort: "8"
-          ToPort: "8"
+          FromPort: "-1"
+          ToPort: "-1"
         - IpProtocol: tcp
           FromPort: "22"
           ToPort: "22"
@@ -756,6 +756,23 @@ Resources:
       Roles:
         - !Ref ServerRoleP1
 
+  P1Ec2SecGroup:
+    Type: AWS::EC2::SecurityGroup
+    Properties:
+      GroupDescription: Open-up ports for ICMP and SSH from 10.x.x.x
+      GroupName: !Join ["-", [P1, Ref: "AWS::StackName", "EC2-sec-group"]]
+      VpcId:
+        Ref: VPCP1
+      SecurityGroupIngress:
+        - IpProtocol: icmp
+          CidrIp: 10.0.0.0/8
+          FromPort: "-1"
+          ToPort: "-1"
+        - IpProtocol: tcp
+          FromPort: "22"
+          ToPort: "22"
+          CidrIp: 10.4.0.0/16
+
   ServerEc2P1:
     Type: AWS::EC2::Instance
     DependsOn: PrivateSubnetBP1
@@ -764,6 +781,8 @@ Resources:
         Ref: PrivateSubnetBP1
       ImageId: !FindInMap [RegionMap, !Ref "AWS::Region", AMI]
       InstanceType: t2.micro
+      SecurityGroupIds:
+        - Ref: P1Ec2SecGroup
       IamInstanceProfile:
         Ref: InstanceProfileP1
       Tags:
@@ -1016,8 +1035,8 @@ Resources:
       SecurityGroupIngress:
         - IpProtocol: icmp
           CidrIp: 10.0.0.0/8
-          FromPort: "8"
-          ToPort: "8"
+          FromPort: "-1"
+          ToPort: "-1"
         - IpProtocol: tcp
           FromPort: "22"
           ToPort: "22"
@@ -1322,9 +1341,9 @@ Resources:
         Ref: VPCDCS1
       SecurityGroupIngress:
         - IpProtocol: icmp
-          CidrIp: 10.0.0.0/16
-          FromPort: "8"
-          ToPort: "8"
+          CidrIp: 10.0.0.0/8
+          FromPort: "-1"
+          ToPort: "-1"
         - IpProtocol: tcp
           FromPort: "22"
           ToPort: "22"

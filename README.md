@@ -101,22 +101,94 @@ Run Cloudformation template 1.tgw-vpcs.yaml to deploy the VPCs.
 
 1. For **Configuration stack options** we dont need to change anything, so just click **Next** in the bottom right.
 
-1. Scroll down to the bottom of the **Review name_of_youstack** and check the **I acknowledge the AWS CloudFormation might create IAM resourcfes with custom names.**.
+1. Scroll down to the bottom of the **Review name_of_youstack** and check the **I acknowledge the AWS CloudFormation might create IAM resourcfes with custom names.** Click the **Create** button in the lower right.
    ![Create Stack button](./images/createStack-VPCiam.png)
 
 1. wait for the Stack to show **Create_Complete**.
    ![Create Stack button](./images/createStack-VPCComplete.png)
 
-   </p>
-   </details>
+      </p>
+      </details>
+
+      <details>
+   <summary>Investigate the VPCs</summary><p>
+
+- Add steps to take a look at the Subnets, route tables, etc.
+- Add steps for using session manager to access an EC2 instance. Talk about no Bastion etc.
+
+</p>
+</details>
 
 ### 3. Create Transit Gateway and Datacenter Router
 
-1. Run Cloudformation template 2.tgw-csr.yaml. Be sure to use the stack name used in step one for the 'Parent Stack'.
+We now are ready to start our connectivity and routing policy.
+Run Cloudformation template 2.tgw-csr.yaml to deploy the Transit Gateway, route Tables, and the Datacenter Router (Cisco CSR).
+
+<details>
+<summary>HOW TO Deploy the Transit Gateway and Datacenter Router</summary><p>
+
+1. In the AWS Management Console change to the region you are working in. This is in the upper right hand drop down menu.
+
+1. In the AWS Management Console choose **Services** then select **EC2**.
+
+1. From the left-hand menu select **Key Pairs**.
+
+1. Click **Create Key Pair** in the main panel and give your new key a name. Click **Create**.
+
+1. Save the keypair to your local machine for easy access later. \*note: We will need this key to access the Cisco CSR router that is in our Simulated Datacenter VPC\*\*.
+
+1. In the AWS Management Console choose **Services** then select **Cloudformation**.
+
+1. In the main panel select **Create Stack** in the upper right hand corner.<p>
+   ![Create Stack button](./images/createStack.png)
+
+1. Make sure **Template is ready** is selected from Prepare template options.
+
+1. At the **Prerequisite - Prepare template** screen, for **template source** select **Upload a template file** and click **Choose file** from **Upload a Template file**. from your local files select **2.tgw-csr.yaml** and click **Open**.
+
+1. Back at the **Prerequisite - Prepare template** screen, clcik **Next** in the lower right.
+
+1. For the **Specify stack details** give the stack a name (compounded names work well. i.e. if the VPC stack abouve was named **TGW1** name this stack **TGW1-CSR**). and Select two Availability Zones (AZs) to deploy to. \*We will be deploying all of the VPCs in the same AZs, but that is not required. Click **Next**.
+   ![Create Stack button](./images/createStack-CSRparameters.png)
+
+1. For **Configuration stack options** we dont need to change anything, so just click **Next** in the bottom right.
+
+1. Scroll down to the bottom of the **Review name_of_youstack** and check the **I acknowledge the AWS CloudFormation might create IAM resourcfes with custom names.** Click the **Create** button in the lower right.
+   ![Create Stack button](./images/createStack-VPCiam.png)
+
+1. wait for the Stack to show **Create_Complete**.
+   ![Create Stack button](./images/createStack-CSRcomplete.png)
+
+   </p>
+   </details>
+
+<summary>Investigate the TGW</summary><p>
+- Add steps to take a look at the TGW, TGW route tables, TGW attachments.
+- Add steps for accessing Cloud9.
+
+</p>
+</details>
+
+<details>
+<summary>Setup routing across VPC</summary><p>
+- Add steps to take a look at the TGW, TGW route tables, TGW attachments.
+- Add steps for accessing Cloud9.
+
+</p>
+</details>
+<details>
+<summary>Setup VPN Between Datacenter and Transit Gateway</summary><p>
+Ipsec tunnels can be setup over the internet or over Direct Connect (using a Public Virtual Interface). In this case we are connecting over the public backbone of AWS.
+We will create two VPN tunnels from the Transit Gateway and connect them into a single instance of the Cisco CSR in the Datacenter. 
+In a real production environment we would setup a second router for redundancy and for added bandwith setup multiple tunnels from each Cisco CSR (or whichever ipsec device you use). Each ipsec tunnel provides up to 1.25Gbps. This is called Equal cost multipath routing. On the AWS side, up to 50 parallel paths are supported. Many vendors support 4-8 ECMP paths, so check with your vendor)
+
+</p>
+</details>
+
 1. Create TGW attachment for VPN.
 
-- use 169.254.10.0/30 and 169.254.11.0/30 for CIDR.
-- use awsamazon for custom settings
+- use **169.254.10.0/30** and **169.254.11.0/30** for CIDR.
+- use **awsamazon** for custom settings
 
 1. using the two VPN tunnel endpoint address generated from step 3, run the bash script, createcsr.sh. Be sure to check the console VPC Service. Under Site-to-Site VPN tunnel detail find the addresses. Be sure to put the address that lines up with Inside IP CIDR address 169.254.10.0/30 for ip1.
 
