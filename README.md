@@ -32,17 +32,32 @@ In our case, we are going to provide three types of VPCs:
 ![Speficy Details Screenshot](./images/hybrid-subnets-diagram.png)
 
 Carving up and assigning private IP address(RFC 1918 addresses) space is big subject and can be daunting of you have a large enterprise today, espeically with mergers. Even when you have a centralized IP address management system (IPAM), you will find undocumented address space being used and sometimes finding useable space is difficult. However we want to find large non-fragmented spaces so we can create a well-summerized network. Don't laugh, we all like a challenge, right?
-In our case we found that the 10.0.0.0/11 space was available (I know fiction, right?). So, we are going to carve up /13's for our production and non-production and we will grab a /16's for our shared service and a /16 for our simulated datacenter.
+In our case we found that the 10.0.0.0/11 space was available (I know, fiction, right?). So, we are going to carve up /13's for our production and non-production and we will grab a /16's for our shared service and a /16 for our simulated datacenter.
 What does that mean?
 
-1. Non-Production CIDR: 10.16.0.0/13 is 10.16.0.0 - 10.23.255.255. which we can carve into eight /16 subnets, one for each of our VPCs.
-1. Production CIDR: 10.8.0.0/13 is 10.8.0.0 - 10.15.255.255. which we can also carve into eight /16 subnets.
-1. Shared Service CIDR: 10.0.0.0/16 - 10.0.0.0 - 10.0.255.255. which we will use for 1 Datacenter Services VPC.
-1. Simulated Datacenter CIDR: 10.4.0.0/16 - 10.4.0.0 - 10.4.255.255. which will be our Datacenter VPC.
+1. **Non-Production CIDR: 10.16.0.0/13** is 10.16.0.0 - 10.23.255.255. which we can carve into eight /16 subnets, one for each of our VPCs.
+1. **Production CIDR: 10.8.0.0/13** is 10.8.0.0 - 10.15.255.255. which we can also carve into eight /16 subnets.
+1. **Shared Service CIDR: 10.0.0.0/16** - 10.0.0.0 - 10.0.255.255. which we will use for 1 Datacenter Services VPC.
+
+\*\*We also will carve out a /16 CIDR for our Datacenter. In the real world this will likely be a list of many summerized CIDRs, both rfc 1918(private address space) and public IP CIDRs (addresses typically assigned to your organization from the Internet Assigned Numbers Authority (IANA) )
+
+- **Simulated Datacenter CIDR: 10.4.0.0/16** - 10.4.0.0 - 10.4.255.255. which will be our Datacenter VPC.
 
 ### Connectivity
 
-For connectivity between VPCs, AWS Transit Gateway make life easy.
+For connectivity between VPCs, AWS Transit Gateway make life easy. It will form the core of our VPC to VPC and VPC to Datacenter communication.
+
+AWS Transit Gateway is a service that enables customers to connect their Amazon Virtual Private Clouds (VPCs) and their on-premises networks to a single gateway. As you grow the number of workloads running on AWS, you need to be able to scale your networks across multiple accounts and Amazon VPCs to keep up with the growth. Today, you can connect pairs of Amazon VPCs using peering. However, managing point-to-point connectivity across many Amazon VPCs, without the ability to centrally manage the connectivity policies, can be operationally costly and cumbersome. For on-premises connectivity, you need to attach your AWS VPN to each individual Amazon VPC. This solution can be time consuming to build and hard to manage when the number of VPCs grows into the hundreds.
+
+**Key Definitions**
+
+- **attachment** — You can attach a VPC or VPN connection to a transit gateway.
+
+- **transit gateway route table** — A transit gateway has a default route table and can optionally have additional route tables. A route table includes dynamic and static routes that decide the next hop based on the destination IP address of the packet. The target of these routes could be a VPC or a VPN connection. By default, the VPCs and VPN connections that you attach to a transit gateway are associated with the default transit gateway route table.
+
+- **associations** — Each attachment is associated with exactly one route table. Each route table can be associated with zero to many attachments.
+
+- **route propagation** — A VPC or VPN connection can dynamically propagate routes to a transit gateway route table. With a VPC, you must create static routes to send traffic to the transit gateway. With a VPN connection, routes are propagated from the transit gateway to your on-premises router using Border Gateway Protocol (BGP).
 
 ![Speficy Details Screenshot](./images/hybrid-tgw-diagram.png)
 
@@ -75,23 +90,23 @@ Since we will be deploying Cloud9 into our Datacenter VPC, we need to pick one o
 
 1. With our Default VPC checked select the **Actions** dropdown above it and select **Delete VPC**.
 
-1. In the _Delete VPC_ Panel, check the box 'I Acknowledge that I want to delete my default VPC.' and click the **Delete VPC** button in the bottomm right.
+1. In the _Delete VPC_ Panel, check the box 'I Acknowledge that I want to delete my default VPC.' and click the **Delete VPC** button in the bottom right.
 
-1. You should gett a green highlighted Dialog stating 'The VPC was deleted' and you can click **Close**. _If it is Red, then likely something is deployed into this VPC and you will have to remove those resources (could be EC2 instances, NAT Gateway, VPC endpoints, etc)_.
+1. You should get a green highlighted Dialog stating 'The VPC was deleted' and you can click **Close**. _If it is red, then likely something is deployed into this VPC and you will have to remove those resources (could be EC2 instances, NAT Gateway, VPC endpoints, etc). You could also consider another region from the list above._
 
 </p>
 </details>
 
 ### 2. Deploy Our Five VPCs
 
-Run Cloudformation template 1.tgw-vpcs.yaml to deploy the VPCs.
+Run CloudFormation template 1.tgw-vpcs.yaml to deploy the VPCs.
 
 <details>
 <summary>HOW TO Deploy the VPCs</summary><p>
 
 1. In the AWS Management Console change to the region you are working in. This is in the upper right hand drop down menu.
 
-1. In the AWS Management Console choose **Services** then select **Cloudformation**.
+1. In the AWS Management Console choose **Services** then select **CloudFormation**.
 
 1. In the main panel select **Create Stack** in the upper right hand corner.<p>
    ![Create Stack button](./images/createStack.png)
@@ -107,7 +122,7 @@ Run Cloudformation template 1.tgw-vpcs.yaml to deploy the VPCs.
 
 1. For **Configuration stack options** we dont need to change anything, so just click **Next** in the bottom right.
 
-1. Scroll down to the bottom of the **Review name_of_youstack** and check the **I acknowledge the AWS CloudFormation might create IAM resourcfes with custom names.** Click the **Create** button in the lower right.
+1. Scroll down to the bottom of the **Review name_of_youstack** and check the **I acknowledge that AWS CloudFormation might create IAM resources with custom names.** Click the **Create** button in the lower right.
    ![Create Stack](./images/createStack-VPCiam.png)
 
 1. wait for the Stack to show **Create_Complete**.
@@ -167,7 +182,7 @@ Run Cloudformation template 2.tgw-csr.yaml to deploy the Transit Gateway, route 
 
       </p>
       </details>
-      
+
 <details>
 <summary>Access AWS Cloud9 Environment </summary><p>
 - Add steps to take a look at the TGW, TGW route tables, TGW attachments.
@@ -182,9 +197,9 @@ Run Cloudformation template 2.tgw-csr.yaml to deploy the Transit Gateway, route 
 1. This will bring up the Cloud9 Console and download the github repo to your working folder.
 
 1. From the **file** menu select **Upload Local Files...** and click **Select files** button, navigate to the key file you created earlier. _note: it should have a .pem extension_.
-   ![Upload file to Cloud9](./images/cloud9-uploadfiles.png)
+   ![Upload file to Cloud9](./images/cloud9-uploadfile.png)
 
-1. In the main pane click the + sign and launch a **New Terminal**. This is a bash shell on the Cloud9 Instance
+1. In the main panelclick the + sign and launch a **New Terminal**. This is a bash shell on the Cloud9 Instance
 
 1. move the key to the .ssh folder: mv _key_name_.pem ~/.ssh/.
 
@@ -224,58 +239,141 @@ In a real production environment we would setup a second router for redundancy a
 
 - **Transit Gateway ID** will have a name Tag matching your first Cloudformation Stack name.
 - **Attachment Type** is **VPN**
-- **Customer Gateway** (CGW) will be \**Exisiting. *note: the Cloudformation template created the CGW. it is the IP address of our Datacenter VPN device and in the lab matches the IP of the SSH command above.
+- **Customer Gateway** (CGW) will be **Exisiting**. _note: the Cloudformation template created the CGW. it is the IP address of our Datacenter VPN device and in the lab matches the IP of the SSH command above._
 - Leave **Routing options** set to **Dynamic(requires BGP)**. _note: BGP is required if you want traffic to balance across more than one VPN tunnel at a time (ECMP or Equal Cost Multipathing)_
 - For **Inside IP CIDR for Tunnel 1** use **169.254.10.0/30** and **169.254.11.0/30** for CIDR.
 
 - For **Pre-Shared Key for Tunnel 1** use **awsamazon**
 - For **Inside IP CIDR for Tunnel 2** use **169.254.10.0/30** and **169.254.11.0/30** for CIDR.
 - For **Pre-Shared Key for Tunnel 2** use **awsamazon**
-  Click **Create attachment**
+- Once the page is filled out, click **Create attachment** at the bottom right.
   ![Create VPN Attachment](./images/tgw-createvpnattach.png)
 
-1. From the Menu on the Left Select **Site-to-Site VPN Connections**. From the main pane you will see the VPN is in State **pending**. That fine lets take a look toward the bottom, and click the **Tunnel Details** tab. Record the two **Outside IP Address**es. We want to record them in the order of the one pairing up with the **Inside IP CIDR** range 169.254.**10**.0/30 first.
+1.  While we are on the **Transit Gateway Attachments** page, lets go back to the top and give the VPN connection a name. If you click the pencil that appear when you mouse over the **Name** column, you can enter a name. Be sure to click the _check_ mark to save the name.
 
-1. While we are on the **Site-to-Site VPN Connections** page, lets go back to the top and give the VPN connection a name. If you click the pencil that appear when you mouse over the **Name** column, you can enter a name. Be sure to click the _check_ mark to save the name. \*\*THIS IS NOT SHOWING UP IN THE ASSOCIATIONS
+1.  From the Menu on the Left Select **Site-to-Site VPN Connections**. From the main panel, you likely will see the VPN is in State **pending**. That fine. Lets take a look toward the bottom, and click the **Tunnel Details** tab. Record the two **Outside IP Address**es. We want to record them in the order of the one pairing up with the **Inside IP CIDR** range 169.254.**10**.0/30 first.
 
-1. From the Menu on the Left Select **Transit Gateway Route Tables**. From the table in the main pane select **Green Route Table**. Lets take a look toward the bottom, and click the **Associations** tab. Associations mean that traffic coming from the outside toward the Transit gateway will use this route table to know where the packet will go after routing through the TGW. _note: An attachment can only be Associated with one route table. But a route table can have multiple associations_. Here in the **Green Route Table**, We already have one association, The **Datacenter Services VPC**. Click **Create associations** in the **Associations** tab. From the drop-down list, select the vpn. _note:it should be the only one in the list without a **Association route table** ._ Click **Create assocation**.
+1.  From the Menu on the Left Select **Transit Gateway Route Tables**. From the table in the main panel select **Green Route Table**. Lets take a look toward the bottom, and click the **Associations** tab. Associations mean that traffic coming from the outside toward the Transit gateway will use this route table to know where the packet will go after routing through the TGW. _note: An attachment can only be Associated with one route table. But a route table can have multiple associations_. Here in the **Green Route Table**, We already have one association, The **Datacenter Services VPC**. Click **Create associations** in the **Associations** tab. From the drop-down list, select the vpn. _note:it should be the only one in the list without a **Association route table** ._ Click **Create assocation**.
+    ![Associate VPN](./images/tgw-vpnassocationspending.png)
 
-1. While at the **Transit Gateway Route Tables**, take a look at the **Propagations** tab. These are the Resources that Dynamically inform the route table. An attachment can propigate to multiple route tables. In this case, we want to propagate with all of the route tables, but lets start with the **Green Route Table**. We can see all of the VPCs are propagating their CIDR to the route table. Since the **Datacenter Services VPC** is also associated with this route table, we need to propagate the VPN routes to the **Green Route Table**
+1.  While at the **Transit Gateway Route Tables**, take a look at the **Propagations** tab. These are the Resources that Dynamically inform the route table. An attachment can propigate to multiple route tables. For the Datacenter, we want to propagate to all of the route tables so the VPC asscoicated with each route table can route back to the datacenter. Lets start with the **Green Route Table**. We can see all of the VPCs are propagating their CIDR to the route table. Since the **Datacenter Services VPC** is also associated with this route table, we need to propagate the VPN routes to the **Green Route Table**.
 
-1. Repeat the above step for the **Red Route Table** and the **Blue Route Table**
+1.  Repeat the above step on the propagations tab for the **Red Route Table** and the **Blue Route Table**.
 
-1. Take a look at each of the route tables and notice the tab **Routes**. You can see the routes that are propagated, as well as a static route table that was created for you by the Cloudformation template. That's the default route (0.0.0.0/0) that will direct traffic destined for the internet to the **Datacenter Services VPC** and ultimately through the NAT Gateway in that VPC. \*note: there is also a route table with no name. It is the dafult route table. In this lab we do not intend to use the default route table.
+1.  Take a look at each of the route tables and notice the tab **Routes**. You can see the routes that are propagated, as well as a static route table that was created for you by the Cloudformation template. That's the default route (0.0.0.0/0) that will direct traffic destined for the internet to the **Datacenter Services VPC** and ultimately through the NAT Gateway in that VPC. _note: there is also a route table with no name. This is the dafult route table. In this lab we do not intend to use the default route table_.
 
-1. Back on the Cloud9 browser tab, using the two VPN tunnel endpoint address generated from the step above, cd to tgwwalk on the Cloud9 bash console and run the bash script, ./createcsr.sh. _note: Be sure to put the address that lines up with Inside IP CIDR address 169.254.10.0/30 for ip1_.
+1.  Back on the Cloud9 browser tab, using the two VPN tunnel endpoint address generated from the step above, cd to tgwwalk on the Cloud9 bash console and run the bash script, ./createcsr.sh. _note: Be sure to put the address that lines up with Inside IP CIDR address 169.254.10.0/30 for ip1_.
+    Example from Site-to-Site VPN
+    ![VPN tunnel Addresses](./images/vpn-tunneladdresses.png)
 
-```
-cd tgwwalk
-##./createcsr.sh ip1 ip2 outputfile
-./createcsr.sh 1.1.1.1 2.2.2.2 mycsrconfig.txt
-```
+    ```
+    cd tgwwalk
+    ##./createcsr.sh ip1 ip2 outputfile
+    ./createcsr.sh 35.166.118.167 52.36.14.223 mycsrconfig.txt
+    ```
 
-1. On the left hand pane, the output file should be listed
-1. enter configuration mode
+    _note: AWS generates starter templates to assist with the configuration for the on-prem router. For your real world deployments, you can get a starter template from the console for various devices (Cisco, Juniper, Palo Alto, F5, Checkpoint, etc). Word of Caution is to look closely at the routing policy in the BGP section. you may not want to send a default route out. You likely also want to consider using a route filter to prevent certain routes from being propagated to you._
 
-```
-config t
-```
+1.  On the left hand panel, the output file should be listed. You may have to open the tgwalk folder to see the txt file. Select all text (ctrl-a on pc/command-a on mac). Then copy the text to buffer (Select all text (ctrl-c on pc/command-c on mac))
 
-1. Once in Configuration mode _note: you should see (config)# prompt_, paste in the text from the outputfile created in step 4. This will slowly paste in the configuration file.
+1.  enter configuration mode, which will take you to a config prompt
 
-1. if you are still at the (config)# or (config-router) prompt, type **end** and press enter.
+    ```
+    ip-10-4-0-17#conf t
+    Enter configuration commands, one per line.  End with CNTL/Z.
+    ip-10-4-0-17(config)#
+    ```
 
-1. Now lets look at the new interfaces: **sh ip int br**. You should see new interfaces: Tunnel1 and Tunnel2 and they both should show up. \*note: if they do not chnage from down to up after a 2 minutes, likely casue is the ip addresses were flipped in the createcsr script.
-   ![ssh key and ssh to CSR](./images/csr-showtunnel.png)
+1.  Once in Configuration mode _note: you should see (config)# prompt_, paste Select all text (ctrl-v on pc/command-v on mac) in the text from the outputfile created in step 4. This will slowly paste in the configuration file.
 
-1. Lets make sure we are seeing the routes on the Cisco CSR. first we can look at what BGP is seeing: **show ip bgp summary**. The most important thing to see is the State/PfxRcd (Prefixes received). If this is in Active or Idle (likely if neigbor statement is wrong: IP address, AS number) there is a configuration issue. What we want to see is a number. In fact if everything is setup correctly we should see 4 for each neighbor.
+1.  if you are still at the (config)# or (config-router) prompt, type **end** and press enter.
+
+1.  Now lets look at the new interfaces: **sh ip int br**. You should see new interfaces: Tunnel1 and Tunnel2 and they both should show up. \*note: if they do not chnage from down to up after a 2 minutes, likely casue is the ip addresses were flipped in the createcsr script.
+    ![ssh key and ssh to CSR](./images/csr-showtunnel.png)
+
+1.  Lets make sure we are seeing the routes on the Cisco CSR. first we can look at what BGP is seeing: **show ip bgp summary**. The most important thing to see is the State/PfxRcd (Prefixes received). If this is in Active or Idle (likely if neigbor statement is wrong: IP address, AS number) there is a configuration issue. What we want to see is a number. In fact if everything is setup correctly we should see 4 for each neighbor.
+
+    ```
+    ip-10-4-0-17#sh ip bgp summ
+    BGP router identifier 169.254.10.2, local AS number 65001
+    BGP table version is 6, main routing table version 6
+    5 network entries using 1240 bytes of memory
+    9 path entries using 1224 bytes of memory
+    2/2 BGP path/bestpath attribute entries using 560 bytes of memory
+    1 BGP AS-PATH entries using 24 bytes of memory
+    0 BGP route-map cache entries using 0 bytes of memory
+    0 BGP filter-list cache entries using 0 bytes of memory
+    BGP using 3048 total bytes of memory
+    BGP activity 5/0 prefixes, 9/0 paths, scan interval 60 secs
+
+    Neighbor        V           AS MsgRcvd MsgSent   TblVer  InQ OutQ Up/Down  State/PfxRcd
+    169.254.10.1    4        65000      40      43        6    0    0 00:06:03        4
+    169.254.11.1    4        65000      40      44        6    0    0 00:06:04        4
+    ip-10-4-0-17#
+    ```
+
+1.  We can also see what those routes are and how many paths we have with the **show ip routes** or **sh ip ro** command.
+
+    ```
+    ...<output omitted>
+    Gateway of last resort is 10.4.0.1 to network 0.0.0.0
+
+    S*    0.0.0.0/0 [1/0] via 10.4.0.1, GigabitEthernet1
+          10.0.0.0/8 is variably subnetted, 7 subnets, 3 masks
+    B        10.0.0.0/16 [20/100] via 169.254.11.1, 00:00:04
+    S        10.4.0.0/16 is directly connected, GigabitEthernet1
+    C        10.4.0.0/22 is directly connected, GigabitEthernet1
+    L        10.4.0.17/32 is directly connected, GigabitEthernet1
+    B        10.8.0.0/16 [20/100] via 169.254.11.1, 00:00:04
+    B        10.16.0.0/16 [20/100] via 169.254.11.1, 00:00:04
+    B        10.17.0.0/16 [20/100] via 169.254.11.1, 00:00:04
+          169.254.0.0/16 is variably subnetted, 4 subnets, 2 masks
+    C        169.254.10.0/30 is directly connected, Tunnel1
+    L        169.254.10.2/32 is directly connected, Tunnel1
+    C        169.254.11.0/30 is directly connected, Tunnel2
+    L        169.254.11.2/32 is directly connected, Tunnel2
+    ip-10-4-0-17#
+    ```
+
+1.  Notice that there is only one next-hop address fro each of the VPCs CIDRs. We can fix this by allow Equal Cost Multipathing (ECMP).
+    Back in config mode we will add maximum-paths to 8:
+    `ip-10-4-0-17# config t router bgp 65001 address-family-ipv4 maximum-paths 8 end`
+    Now, run **sh ip ro** command again. See, both the tunnels are showing up!
+
+          ```
+          ...<output omitted>
+          Gateway of last resort is 10.4.0.1 to network 0.0.0.0
+
+          S*    0.0.0.0/0 [1/0] via 10.4.0.1, GigabitEthernet1
+                10.0.0.0/8 is variably subnetted, 7 subnets, 3 masks
+          B        10.0.0.0/16 [20/100] via 169.254.11.1, 00:00:13
+                            [20/100] via 169.254.10.1, 00:00:13
+          S        10.4.0.0/16 is directly connected, GigabitEthernet1
+          C        10.4.0.0/22 is directly connected, GigabitEthernet1
+          L        10.4.0.17/32 is directly connected, GigabitEthernet1
+          B        10.8.0.0/16 [20/100] via 169.254.11.1, 00:00:13
+                            [20/100] via 169.254.10.1, 00:00:13
+          B        10.16.0.0/16 [20/100] via 169.254.11.1, 00:00:13
+                            [20/100] via 169.254.10.1, 00:00:13
+          B        10.17.0.0/16 [20/100] via 169.254.11.1, 00:00:13
+                            [20/100] via 169.254.10.1, 00:00:13
+                169.254.0.0/16 is variably subnetted, 4 subnets, 2 masks
+          C        169.254.10.0/30 is directly connected, Tunnel1
+          L        169.254.10.2/32 is directly connected, Tunnel1
+          C        169.254.11.0/30 is directly connected, Tunnel2
+          L        169.254.11.2/32 is directly connected, Tunnel2
+          ip-10-4-0-17#
+          ```
 
 </p>
 </details>
 
 ![Speficy Details Screenshot](./images/hybrid-routes-diagram.png)
+
    <details>
    <summary>Create Routes in the VPC to the Transit Gateway Attachments</summary><p>
+
+While the CloudFormation Template created attachments to the VPCs and route tables for the transit gateway. We need to setup routing within the VPC. What traffic do we want going from each subnet to the Transit Gateway.
 
 1. In the AWS Management Console change to the region you are working in. This is in the upper right hand drop down menu.
 
@@ -283,7 +381,7 @@ config t
 
 1. From the menu on the left, Scroll down and select **Route Tables**.
 
-1. You will see the Route Tables listed in the main pane. Lets Start with NP1-_stack_name_-Private route table, Check the box next to it. Let take a look toward the the bottom of the pane and click the **Routes** tab. Currently, there is just one route, the local VPC route. Since the only way out is going to be the Transit Gateway, lets make our life simple and point a default route to the Transit Gateway Attachment. Click the **Edit Routes** in the **Routes** tab.
+1. You will see the Route Tables listed in the main pane. Lets Start with NP1-_stack_name_-Private route table, Check the box next to it. Let take a look toward the the bottom of the paneland click the **Routes** tab. Currently, there is just one route, the local VPC route. Since the only way out is going to be the Transit Gateway, lets make our life simple and point a default route to the Transit Gateway Attachment. Click the **Edit Routes** in the **Routes** tab.
 
 1. On the **Edit routes** page, Click the **Add route** button and enter a default route by setting the destination of **0.0.0.0/0**. In the Target drop-down, select **Transit Gateway** and pick your Transit Gateway create for this project. It should be the only one.
    ![Stack Complete](./images/vpc-defaultroute.png)
@@ -303,6 +401,13 @@ config t
 1. From the menu on the left, Scroll down and select **Instances**.
 
 1. In the main pane, select an EC2 instance from the list and copy it ip address down. Repeat for as many as you would like to test connectivity. In particular we want to test to the P1 server. Remember, we do not want our non prod instances to be able to reach our production servers or vice-versa.
+
+- You can also get a list of IPs using the AWS CLI which you can run from the Cloud9 Instance. Heres one that extracts out all of them. The 10.16.x.x is the NP1, the 10.8.x.x is the P1 instance.
+
+```
+ aws ec2 describe-instances | grep "PrivateIpAddress" | cut -d '"' -f 4 | awk 'NR == 0 || NR % 4 == 0'
+```
+
 1. In the AWS Management Console choose **Services** then select **Systems Manager**. Systems Manager Gain Operational Insight and Take Action on AWS Resources. We are going to take a look a just one of seven capabilites of Systems Manager.
 
 1. From the menu on the left, Scroll down and select **Session Manager**. Session Manager allows us to use IAM role and policies to determine who has console access without having to manage ssh keys for our instances.
@@ -329,9 +434,32 @@ rtt min/avg/max/mdev = 0.673/0.824/1.096/0.130 ms
 
 1. If you tested between the P1 server and a NP1 or NP2 server, you should have also seen a reply ping. But thats not what we wanted. Take a look at the VPC route table, the Associated Transit Gateway Route table (_for P1 this should be Blue, for NP1 or NP2 this should be Red_) Follow the logic to understand whats going on.
 
+ <details>
+   <summary>SPOLIER Fixing Mysterious Prod to Non-Prod routing</summary><p>
+
+      While we do not have a direct route between the Production and Non-Production VPCs we do have a gateway through the NAT Gateway in the **Datacenter Services VPC**. Let's fix this through a routing mechinism called Blackhole routing (sometimes refered to as null routing).
+
+1. In the AWS Management Console choose **Services** then select **VPC**.
+
+1. From the menu on the left, Scroll down and select **Transit Gateway Routes Tables**.
+
+1. From the table in the main panel select **Blue Route Table**. Lets take a look toward the bottom, and click the **Routes** tab.
+
+1. Take a look at the existing routes and see the 0.0.0.0/0 route that is sending data destined for the Non-prod address to the **Datacenter Services VPC**. Let's prevent that. Click the **Add route** button.
+
+1. At the Create route screen, for the **CIDR** enter **10.16.0.0/13** and check the box next to **Blackhole**. This will drop any traffic destined for the Non-Production VPCs. This is because TGW looks for the most specific route that matches and the /13 is more specific than the /0 route.
+
+   ![Blackhole route](./images/tgw-blackholeroute.png)
+
+1. Go back to Session Manager and connect to the P1 server and re-attempt to ping the NP1 or NP2 servers. Pings should fail now.
+
+1. be sure to repeat the blackhole route in the **Red Route Table** by creating a blackhole route for 10.8.0.0/13.
+
+     </p>
+     </details>
+
 </p>
 </details>
-
 
 ### Build out DNS Infrastructure
 
