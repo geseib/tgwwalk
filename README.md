@@ -167,8 +167,57 @@ Run Cloudformation template 2.tgw-csr.yaml to deploy the Transit Gateway, route 
 
 1. In the AWS Management Console choose **Services** then select **VPC**.
 
-1. 
+1. From the menu on the left, Scroll down and select **Route Tables**.
 
+1. You will see the Route Tables listed in the main pane. Lets Start with NP1-*stack_name*-Private route table, Check the box next to it. Let take a look toward the the bottom of the pane and click the **Routes** tab. Currently, there is just one route, the local VPC route. Since the only way out is going to be the Transit Gateway, lets make our life simple and point a default route to the Transit Gateway Attachment. Click the **Edit Routes** in the **Routes** tab. 
+
+1. On the **Edit routes** page, Click the **Add route** button and enter a default route by setting the destination of **0.0.0.0/0**. In the Target drop-down, select **Transit Gateway** and pick your Transit Gateway create for this project. It should be the only one. 
+![Stack Complete](./images/vpc-defaultroute.png)
+
+1. Repeat the above step for the following route tables:
+  - NP2-*stack_name*-Private
+  - P1-*stack_name*-Private
+  - DCS1-*stack_name*_Private
+
+1. For the **DCS1-*stack_name*-Public, where our NAT Gateway is, we need a special route. We already have a default route pointed at the Internet Gateway(IGW) to get to the internet, so we need a more specific route to route internally. Lets use the while rfc 1918 10.0.0.0/8 CIDR as that can only be internal. Follow the steps above for the **DCS1-*stack_name*-Public route table. Be sure not to alter the **0.0.0.0/0** route pointed to the IGW for this route table.
+
+1. Beacuse the Cloudformation template setup a Security Group to allow ICMP traffic from 10.0.0.0/8, we should now be able to test pings from lots of place.
+
+  1. In the AWS Management Console choose **Services** then select **EC2**.
+
+  1. From the menu on the left, Scroll down and select **Instances**. 
+  
+  1. In the main pane, select an EC2 instance from the list and copy it ip address down. Repeat for as many as you would like to test connectivity. In particular we want to test to the P1 server. Remember, we do not want our non prod instances to be able to reach our production servers or vice-versa.
+  1. In the AWS Management Console choose **Services** then select **Systems Manager**. Systems Manager Gain Operational Insight and Take Action on AWS Resources. We are going to take a look a just one of seven capabilites of Systems Manager.
+
+  1. From the menu on the left, Scroll down and select **Session Manager**. Session Manager allows us to use IAM role and policies to determine who has console access without having to manage ssh keys for our instances. 
+  
+  1. In the main pane, click the **Start sesssion** button. Pick an Instance to shell into. You will now enter a bash shell prompt for that instance.
+
+  1. Let Ping a server. Every one second or so, you should see a new line showing the reply and roundtrip time.
+  ``` ping 10.16.18.220
+h-4.2$ ping 10.16.18.220
+PING 10.16.18.220 (10.16.18.220) 56(84) bytes of data.
+64 bytes from 10.16.18.220: icmp_seq=1 ttl=254 time=1.09 ms
+64 bytes from 10.16.18.220: icmp_seq=2 ttl=254 time=0.763 ms
+64 bytes from 10.16.18.220: icmp_seq=3 ttl=254 time=0.807 ms
+64 bytes from 10.16.18.220: icmp_seq=4 ttl=254 time=0.891 ms
+64 bytes from 10.16.18.220: icmp_seq=5 ttl=254 time=0.736 ms
+64 bytes from 10.16.18.220: icmp_seq=6 ttl=254 time=0.673 ms
+64 bytes from 10.16.18.220: icmp_seq=7 ttl=254 time=0.806 ms
+^C
+--- 10.16.18.220 ping statistics ---
+7 packets transmitted, 7 received, 0% packet loss, time 6042ms
+rtt min/avg/max/mdev = 0.673/0.824/1.096/0.130 ms
+```
+
+1. If you tested between the P1 server and a NP1 or NP2 server, you should have also seen a reply ping. But thats not what we wanted. Take a look at the VPC route table, the Associated Transit Gateway Route table (*for P1 this should be Blue, for NP1 or NP2 this should be Red*) Follow the logic to understand whats going on.
+
+
+
+
+
+ 
 </p>
 </details>
 
@@ -207,10 +256,9 @@ Run Cloudformation template 2.tgw-csr.yaml to deploy the Transit Gateway, route 
 
 1. Take a look at the route table on the CSR by typeing at the #prompt: **sh ip route**. You will see S* 0.0.0.0/0 which is a static default route pointing to the 10.4.0.1 address. This is the local VPC router which will connect the Interface to the Internet Gateway and use an Elastic IP address (its the IP address you used in the SSH command above). This is a one-to-one mapping.
 
-1. 
-
 </p>
 </details>
+
 <details>
 <summary>Setup VPN Between Datacenter and Transit Gateway</summary><p>
 Ipsec tunnels can be setup over the internet or over Direct Connect (using a Public Virtual Interface). In this case we are connecting over the public backbone of AWS.
