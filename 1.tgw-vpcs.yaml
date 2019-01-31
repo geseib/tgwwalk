@@ -1,5 +1,5 @@
 AWSTemplateFormatVersion: "2010-09-09"
-Description: "5 VPC in 2AZs using 10.x.0.0/16:"
+Description: "5 VPC in 2AZs using 10.0.0.0/8:"
 
 Metadata:
   "AWS::CloudFormation::Interface":
@@ -82,7 +82,7 @@ Resources:
   VPCNP1:
     Type: AWS::EC2::VPC
     Properties:
-      CidrBlock: "10.1.0.0/16"
+      CidrBlock: "10.16.0.0/16"
       EnableDnsSupport: "true"
       EnableDnsHostnames: "true"
       InstanceTenancy: default
@@ -97,7 +97,7 @@ Resources:
     Properties:
       VpcId:
         Ref: VPCNP1
-      CidrBlock: "10.1.0.0/22"
+      CidrBlock: "10.16.0.0/22"
       AvailabilityZone:
         Ref: AvailabilityZoneA
       MapPublicIpOnLaunch: true
@@ -110,7 +110,7 @@ Resources:
     Properties:
       VpcId:
         Ref: VPCNP1
-      CidrBlock: "10.1.4.0/22"
+      CidrBlock: "10.16.4.0/22"
       AvailabilityZone:
         Ref: AvailabilityZoneB
       MapPublicIpOnLaunch: true
@@ -148,7 +148,7 @@ Resources:
     Properties:
       VpcId:
         Ref: VPCNP1
-      CidrBlock: "10.1.8.0/21"
+      CidrBlock: "10.16.8.0/21"
       AvailabilityZone:
         Ref: AvailabilityZoneA
       MapPublicIpOnLaunch: false
@@ -161,7 +161,7 @@ Resources:
     Properties:
       VpcId:
         Ref: VPCNP1
-      CidrBlock: "10.1.16.0/21"
+      CidrBlock: "10.16.16.0/21"
       AvailabilityZone:
         Ref: AvailabilityZoneB
       MapPublicIpOnLaunch: false
@@ -227,7 +227,7 @@ Resources:
         Ref: VPCNP1
       SecurityGroupIngress:
         - IpProtocol: icmp
-          CidrIp: 10.0.0.0/16
+          CidrIp: 10.0.0.0/8
           FromPort: "-1"
           ToPort: "-1"
         - IpProtocol: tcp
@@ -242,7 +242,7 @@ Resources:
       SubnetId:
         Ref: PrivateSubnetBNP1
       ImageId: !FindInMap [RegionMap, !Ref "AWS::Region", AMI]
-      InstanceType: t2.large
+      InstanceType: t2.micro
       SecurityGroupIds:
         - Ref: NP1Ec2SecGroup
       IamInstanceProfile:
@@ -256,7 +256,7 @@ Resources:
     Properties:
       VpcId:
         Ref: VPCNP1
-      CidrBlock: "10.1.24.0/24"
+      CidrBlock: "10.16.24.0/24"
       AvailabilityZone:
         Ref: AvailabilityZoneA
       MapPublicIpOnLaunch: false
@@ -269,7 +269,7 @@ Resources:
     Properties:
       VpcId:
         Ref: VPCNP1
-      CidrBlock: "10.1.25.0/24"
+      CidrBlock: "10.16.25.0/24"
       AvailabilityZone:
         Ref: AvailabilityZoneB
       MapPublicIpOnLaunch: false
@@ -313,11 +313,11 @@ Resources:
         - IpProtocol: tcp
           FromPort: "1"
           ToPort: "65535"
-          CidrIp: 10.1.0.0/16
+          CidrIp: 10.16.0.0/16
         - IpProtocol: udp
           FromPort: "1"
           ToPort: "65535"
-          CidrIp: 10.1.0.0/16
+          CidrIp: 10.16.0.0/16
 
   SSMEndpointNP1:
     Type: AWS::EC2::VPCEndpoint
@@ -351,7 +351,7 @@ Resources:
   VPCNP2:
     Type: AWS::EC2::VPC
     Properties:
-      CidrBlock: "10.2.0.0/16"
+      CidrBlock: "10.17.0.0/16"
       EnableDnsSupport: "true"
       EnableDnsHostnames: "true"
       InstanceTenancy: default
@@ -366,7 +366,7 @@ Resources:
     Properties:
       VpcId:
         Ref: VPCNP2
-      CidrBlock: "10.2.0.0/22"
+      CidrBlock: "10.17.0.0/22"
       AvailabilityZone:
         Ref: AvailabilityZoneA
       MapPublicIpOnLaunch: true
@@ -379,7 +379,7 @@ Resources:
     Properties:
       VpcId:
         Ref: VPCNP2
-      CidrBlock: "10.2.4.0/22"
+      CidrBlock: "10.17.4.0/22"
       AvailabilityZone:
         Ref: AvailabilityZoneB
       MapPublicIpOnLaunch: true
@@ -417,7 +417,7 @@ Resources:
     Properties:
       VpcId:
         Ref: VPCNP2
-      CidrBlock: "10.2.8.0/21"
+      CidrBlock: "10.17.8.0/21"
       AvailabilityZone:
         Ref: AvailabilityZoneA
       MapPublicIpOnLaunch: false
@@ -430,7 +430,7 @@ Resources:
     Properties:
       VpcId:
         Ref: VPCNP2
-      CidrBlock: "10.2.16.0/21"
+      CidrBlock: "10.17.16.0/21"
       AvailabilityZone:
         Ref: AvailabilityZoneB
       MapPublicIpOnLaunch: false
@@ -497,8 +497,8 @@ Resources:
       SecurityGroupIngress:
         - IpProtocol: icmp
           CidrIp: 10.0.0.0/8
-          FromPort: "8"
-          ToPort: "8"
+          FromPort: "-1"
+          ToPort: "-1"
         - IpProtocol: tcp
           FromPort: "22"
           ToPort: "22"
@@ -511,7 +511,7 @@ Resources:
       SubnetId:
         Ref: PrivateSubnetBNP2
       ImageId: !FindInMap [RegionMap, !Ref "AWS::Region", AMI]
-      InstanceType: t2.large
+      InstanceType: t2.micro
       SecurityGroupIds:
         - Ref: NP2Ec2SecGroup
       IamInstanceProfile:
@@ -525,7 +525,7 @@ Resources:
     Properties:
       VpcId:
         Ref: VPCNP2
-      CidrBlock: "10.2.24.0/24"
+      CidrBlock: "10.17.24.0/24"
       AvailabilityZone:
         Ref: AvailabilityZoneA
       MapPublicIpOnLaunch: false
@@ -538,7 +538,7 @@ Resources:
     Properties:
       VpcId:
         Ref: VPCNP2
-      CidrBlock: "10.2.25.0/24"
+      CidrBlock: "10.17.25.0/24"
       AvailabilityZone:
         Ref: AvailabilityZoneB
       MapPublicIpOnLaunch: false
@@ -582,11 +582,11 @@ Resources:
         - IpProtocol: tcp
           FromPort: "1"
           ToPort: "65535"
-          CidrIp: 10.2.0.0/16
+          CidrIp: 10.17.0.0/16
         - IpProtocol: udp
           FromPort: "1"
           ToPort: "65535"
-          CidrIp: 10.2.0.0/16
+          CidrIp: 10.17.0.0/16
 
   SSMEndpointNP2:
     Type: AWS::EC2::VPCEndpoint
@@ -620,7 +620,7 @@ Resources:
   VPCP1:
     Type: AWS::EC2::VPC
     Properties:
-      CidrBlock: "10.3.0.0/16"
+      CidrBlock: "10.8.0.0/16"
       EnableDnsSupport: "true"
       EnableDnsHostnames: "true"
       InstanceTenancy: default
@@ -635,7 +635,7 @@ Resources:
     Properties:
       VpcId:
         Ref: VPCP1
-      CidrBlock: "10.3.0.0/22"
+      CidrBlock: "10.8.0.0/22"
       AvailabilityZone:
         Ref: AvailabilityZoneA
       MapPublicIpOnLaunch: true
@@ -648,7 +648,7 @@ Resources:
     Properties:
       VpcId:
         Ref: VPCP1
-      CidrBlock: "10.3.4.0/22"
+      CidrBlock: "10.8.4.0/22"
       AvailabilityZone:
         Ref: AvailabilityZoneB
       MapPublicIpOnLaunch: true
@@ -686,7 +686,7 @@ Resources:
     Properties:
       VpcId:
         Ref: VPCP1
-      CidrBlock: "10.3.8.0/21"
+      CidrBlock: "10.8.8.0/21"
       AvailabilityZone:
         Ref: AvailabilityZoneA
       MapPublicIpOnLaunch: false
@@ -699,7 +699,7 @@ Resources:
     Properties:
       VpcId:
         Ref: VPCP1
-      CidrBlock: "10.3.16.0/21"
+      CidrBlock: "10.8.16.0/21"
       AvailabilityZone:
         Ref: AvailabilityZoneB
       MapPublicIpOnLaunch: false
@@ -756,6 +756,23 @@ Resources:
       Roles:
         - !Ref ServerRoleP1
 
+  P1Ec2SecGroup:
+    Type: AWS::EC2::SecurityGroup
+    Properties:
+      GroupDescription: Open-up ports for ICMP and SSH from 10.x.x.x
+      GroupName: !Join ["-", [P1, Ref: "AWS::StackName", "EC2-sec-group"]]
+      VpcId:
+        Ref: VPCP1
+      SecurityGroupIngress:
+        - IpProtocol: icmp
+          CidrIp: 10.0.0.0/8
+          FromPort: "-1"
+          ToPort: "-1"
+        - IpProtocol: tcp
+          FromPort: "22"
+          ToPort: "22"
+          CidrIp: 10.4.0.0/16
+
   ServerEc2P1:
     Type: AWS::EC2::Instance
     DependsOn: PrivateSubnetBP1
@@ -763,7 +780,9 @@ Resources:
       SubnetId:
         Ref: PrivateSubnetBP1
       ImageId: !FindInMap [RegionMap, !Ref "AWS::Region", AMI]
-      InstanceType: t2.large
+      InstanceType: t2.micro
+      SecurityGroupIds:
+        - Ref: P1Ec2SecGroup
       IamInstanceProfile:
         Ref: InstanceProfileP1
       Tags:
@@ -775,7 +794,7 @@ Resources:
     Properties:
       VpcId:
         Ref: VPCP1
-      CidrBlock: "10.3.24.0/24"
+      CidrBlock: "10.8.24.0/24"
       AvailabilityZone:
         Ref: AvailabilityZoneA
       MapPublicIpOnLaunch: false
@@ -788,7 +807,7 @@ Resources:
     Properties:
       VpcId:
         Ref: VPCP1
-      CidrBlock: "10.3.25.0/24"
+      CidrBlock: "10.8.25.0/24"
       AvailabilityZone:
         Ref: AvailabilityZoneB
       MapPublicIpOnLaunch: false
@@ -832,11 +851,11 @@ Resources:
         - IpProtocol: tcp
           FromPort: "1"
           ToPort: "65535"
-          CidrIp: 10.3.0.0/16
+          CidrIp: 10.8.0.0/16
         - IpProtocol: udp
           FromPort: "1"
           ToPort: "65535"
-          CidrIp: 10.3.0.0/16
+          CidrIp: 10.8.0.0/16
 
   SSMEndpointP1:
     Type: AWS::EC2::VPCEndpoint
@@ -1015,9 +1034,9 @@ Resources:
         Ref: VPCDC1
       SecurityGroupIngress:
         - IpProtocol: icmp
-          CidrIp: 10.0.0.0/16
-          FromPort: "8"
-          ToPort: "8"
+          CidrIp: 10.0.0.0/8
+          FromPort: "-1"
+          ToPort: "-1"
         - IpProtocol: tcp
           FromPort: "22"
           ToPort: "22"
@@ -1030,7 +1049,7 @@ Resources:
       SubnetId:
         Ref: PrivateSubnetBDC1
       ImageId: !FindInMap [RegionMap, !Ref "AWS::Region", AMI]
-      InstanceType: t2.large
+      InstanceType: t2.micro
       SecurityGroupIds:
         - Ref: DC1Ec2SecGroup
       IamInstanceProfile:
@@ -1322,9 +1341,9 @@ Resources:
         Ref: VPCDCS1
       SecurityGroupIngress:
         - IpProtocol: icmp
-          CidrIp: 10.0.0.0/16
-          FromPort: "8"
-          ToPort: "8"
+          CidrIp: 10.0.0.0/8
+          FromPort: "-1"
+          ToPort: "-1"
         - IpProtocol: tcp
           FromPort: "22"
           ToPort: "22"
@@ -1337,7 +1356,7 @@ Resources:
       SubnetId:
         Ref: PrivateSubnetBDCS1
       ImageId: !FindInMap [RegionMap, !Ref "AWS::Region", AMI]
-      InstanceType: t2.large
+      InstanceType: t2.micro
       SecurityGroupIds:
         - Ref: DCS1Ec2SecGroup
       IamInstanceProfile:
