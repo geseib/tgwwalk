@@ -2,7 +2,7 @@
 
 This walkthrough shows how to setup Transit Gateway with multiple VPC and Routing domains as well as connect the Transit Gateway to the Datacenter via VPN.
 
-![Speficy Details Screenshot](./images/HybridDiagram-TGW.png)
+![Speficy Details Screenshot](./images/hybrid-tgw-diagram.png)
 
 ## Introduction
 
@@ -17,6 +17,8 @@ After we have connectivity and routing, we need to provide seamless DNS resoluti
 
 ### VPC layout
 
+![Speficy Details Screenshot](./images/hybrid-vpcs-diagram.png)
+
 There are lots of choices for VPC and Account Architectures, and this is mostly out-of-scope for this workshop. Take a look at what Androski Spicer presented at re:invent 2018 in his [From One to Many: Evolving VPC Design](https://www.youtube.com/watch?v=8K7GZFff_V0 "youtube video") session.
 In our case, we are going to provide three types of VPCs:
 
@@ -26,6 +28,8 @@ In our case, we are going to provide three types of VPCs:
 1. **Datacenter**: In this workshop we need to simulate a datacenter. In the real world, this would be our existing datacenter or colo and the hardware it contains. But we are going to make our own version in the cloud!
 
 ### IP addressing
+
+![Speficy Details Screenshot](./images/hybrid-subnets-diagram.png)
 
 Carving up and assigning private IP address(RFC 1918 addresses) space is big subject and can be daunting of you have a large enterprise today, espeically with mergers. Even when you have a centralized IP address management system (IPAM), you will find undocumented address space being used and sometimes finding useable space is difficult. However we want to find large non-fragmented spaces so we can create a well-summerized network. Don't laugh, we all like a challenge, right?
 In our case we found that the 10.0.0.0/11 space was available (I know fiction, right?). So, we are going to carve up /13's for our production and non-production and we will grab a /16's for our shared service and a /16 for our simulated datacenter.
@@ -38,7 +42,9 @@ What does that mean?
 
 ### Connectivity
 
-For connectivity between VPCs, AWS Transit Gateway make life easy. We
+For connectivity between VPCs, AWS Transit Gateway make life easy.
+
+![Speficy Details Screenshot](./images/hybrid-tgw-diagram.png)
 
 ## Getting Started
 
@@ -323,6 +329,7 @@ config t
 
 </p>
 </details>
+![Speficy Details Screenshot](./images/hybrid-routes-diagram.png)
 
 ### Build out DNS Infrastructure
 
