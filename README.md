@@ -110,8 +110,8 @@ Run Cloudformation template 1.tgw-vpcs.yaml to deploy the VPCs.
       </p>
       </details>
 
-      <details>
-   <summary>Investigate the VPCs</summary><p>
+<details>
+<summary>Investigate the VPCs</summary><p>
 
 - Add steps to take a look at the Subnets, route tables, etc.
 - Add steps for using session manager to access an EC2 instance. Talk about no Bastion etc.
@@ -159,43 +159,46 @@ Run Cloudformation template 2.tgw-csr.yaml to deploy the Transit Gateway, route 
 1. wait for the Stack to show **Create_Complete**.
    ![Stack Complete](./images/createStack-CSRcomplete.png)
 
-   </p>
-   </details>
+      </p>
+      </details>
+   <details>
+   <summary>Create Routes in the VPC to the Transit Gateway Attachments</summary><p>
 
-<summary>Create Routes in the VPC to the Transit Gateway Attachments</summary><p>
 1. In the AWS Management Console change to the region you are working in. This is in the upper right hand drop down menu.
 
 1. In the AWS Management Console choose **Services** then select **VPC**.
 
 1. From the menu on the left, Scroll down and select **Route Tables**.
 
-1. You will see the Route Tables listed in the main pane. Lets Start with NP1-*stack_name*-Private route table, Check the box next to it. Let take a look toward the the bottom of the pane and click the **Routes** tab. Currently, there is just one route, the local VPC route. Since the only way out is going to be the Transit Gateway, lets make our life simple and point a default route to the Transit Gateway Attachment. Click the **Edit Routes** in the **Routes** tab. 
+1. You will see the Route Tables listed in the main pane. Lets Start with NP1-_stack_name_-Private route table, Check the box next to it. Let take a look toward the the bottom of the pane and click the **Routes** tab. Currently, there is just one route, the local VPC route. Since the only way out is going to be the Transit Gateway, lets make our life simple and point a default route to the Transit Gateway Attachment. Click the **Edit Routes** in the **Routes** tab.
 
-1. On the **Edit routes** page, Click the **Add route** button and enter a default route by setting the destination of **0.0.0.0/0**. In the Target drop-down, select **Transit Gateway** and pick your Transit Gateway create for this project. It should be the only one. 
-![Stack Complete](./images/vpc-defaultroute.png)
+1. On the **Edit routes** page, Click the **Add route** button and enter a default route by setting the destination of **0.0.0.0/0**. In the Target drop-down, select **Transit Gateway** and pick your Transit Gateway create for this project. It should be the only one.
+   ![Stack Complete](./images/vpc-defaultroute.png)
 
 1. Repeat the above step for the following route tables:
-  - NP2-*stack_name*-Private
-  - P1-*stack_name*-Private
-  - DCS1-*stack_name*_Private
 
-1. For the **DCS1-*stack_name*-Public, where our NAT Gateway is, we need a special route. We already have a default route pointed at the Internet Gateway(IGW) to get to the internet, so we need a more specific route to route internally. Lets use the while rfc 1918 10.0.0.0/8 CIDR as that can only be internal. Follow the steps above for the **DCS1-*stack_name*-Public route table. Be sure not to alter the **0.0.0.0/0** route pointed to the IGW for this route table.
+- NP2-_stack_name_-Private
+- P1-_stack_name_-Private
+- DCS1-_stack_name_\_Private
+
+1. For the **DCS1-_stack_name_-Public, where our NAT Gateway is, we need a special route. We already have a default route pointed at the Internet Gateway(IGW) to get to the internet, so we need a more specific route to route internally. Lets use the while rfc 1918 10.0.0.0/8 CIDR as that can only be internal. Follow the steps above for the **DCS1-_stack_name_-Public route table. Be sure not to alter the **0.0.0.0/0** route pointed to the IGW for this route table.
 
 1. Beacuse the Cloudformation template setup a Security Group to allow ICMP traffic from 10.0.0.0/8, we should now be able to test pings from lots of place.
 
-  1. In the AWS Management Console choose **Services** then select **EC2**.
+1. In the AWS Management Console choose **Services** then select **EC2**.
 
-  1. From the menu on the left, Scroll down and select **Instances**. 
-  
-  1. In the main pane, select an EC2 instance from the list and copy it ip address down. Repeat for as many as you would like to test connectivity. In particular we want to test to the P1 server. Remember, we do not want our non prod instances to be able to reach our production servers or vice-versa.
-  1. In the AWS Management Console choose **Services** then select **Systems Manager**. Systems Manager Gain Operational Insight and Take Action on AWS Resources. We are going to take a look a just one of seven capabilites of Systems Manager.
+1. From the menu on the left, Scroll down and select **Instances**.
 
-  1. From the menu on the left, Scroll down and select **Session Manager**. Session Manager allows us to use IAM role and policies to determine who has console access without having to manage ssh keys for our instances. 
-  
-  1. In the main pane, click the **Start sesssion** button. Pick an Instance to shell into. You will now enter a bash shell prompt for that instance.
+1. In the main pane, select an EC2 instance from the list and copy it ip address down. Repeat for as many as you would like to test connectivity. In particular we want to test to the P1 server. Remember, we do not want our non prod instances to be able to reach our production servers or vice-versa.
+1. In the AWS Management Console choose **Services** then select **Systems Manager**. Systems Manager Gain Operational Insight and Take Action on AWS Resources. We are going to take a look a just one of seven capabilites of Systems Manager.
 
-  1. Let Ping a server. Every one second or so, you should see a new line showing the reply and roundtrip time.
-  ``` ping 10.16.18.220
+1. From the menu on the left, Scroll down and select **Session Manager**. Session Manager allows us to use IAM role and policies to determine who has console access without having to manage ssh keys for our instances.
+
+1. In the main pane, click the **Start sesssion** button. Pick an Instance to shell into. You will now enter a bash shell prompt for that instance.
+
+1. Let Ping a server. Every one second or so, you should see a new line showing the reply and roundtrip time.
+
+```ping 10.16.18.220
 h-4.2$ ping 10.16.18.220
 PING 10.16.18.220 (10.16.18.220) 56(84) bytes of data.
 64 bytes from 10.16.18.220: icmp_seq=1 ttl=254 time=1.09 ms
@@ -211,13 +214,8 @@ PING 10.16.18.220 (10.16.18.220) 56(84) bytes of data.
 rtt min/avg/max/mdev = 0.673/0.824/1.096/0.130 ms
 ```
 
-1. If you tested between the P1 server and a NP1 or NP2 server, you should have also seen a reply ping. But thats not what we wanted. Take a look at the VPC route table, the Associated Transit Gateway Route table (*for P1 this should be Blue, for NP1 or NP2 this should be Red*) Follow the logic to understand whats going on.
+1. If you tested between the P1 server and a NP1 or NP2 server, you should have also seen a reply ping. But thats not what we wanted. Take a look at the VPC route table, the Associated Transit Gateway Route table (_for P1 this should be Blue, for NP1 or NP2 this should be Red_) Follow the logic to understand whats going on.
 
-
-
-
-
- 
 </p>
 </details>
 
@@ -229,32 +227,32 @@ rtt min/avg/max/mdev = 0.673/0.824/1.096/0.130 ms
 
 1. In the AWS Management Console choose **Services** then select **Cloud9**.
 
-1.From **Your Environments** page click the **Open IDE* button on the Workshop Environment Box.
+1.From **Your Environments** page click the \*_Open IDE_ button on the Workshop Environment Box.
 ![Cloud 9 Environments](./images/cloud9-environments.png)
 
-1. This will bring up the Cloud9 Console and download the github repo to your working folder. 
+1. This will bring up the Cloud9 Console and download the github repo to your working folder.
 
-1. From the **file** menu select **Upload Local Files...** and click **Select files** button, navigate to the key file you created earlier. *note: it should have a .pem extension*.
-![Upload file to Cloud9](./images/cloud9-uploadfiles.png)
+1. From the **file** menu select **Upload Local Files...** and click **Select files** button, navigate to the key file you created earlier. _note: it should have a .pem extension_.
+   ![Upload file to Cloud9](./images/cloud9-uploadfiles.png)
 
 1. In the main pane click the + sign and launch a **New Terminal**. This is a bash shell on the Cloud9 Instance
 
-1. move the key to the .ssh folder: mv *key_name*.pem ~/.ssh/.
+1. move the key to the .ssh folder: mv _key_name_.pem ~/.ssh/.
 
-1. secure the key file: chmod 400 ~/.ssh/*key_name*.pem
+1. secure the key file: chmod 400 ~/.ssh/_key_name_.pem
 
 1.From another broswer tab, again navigate, Management Console choose **Services** then select **CloudFormation**.
 
-1. From the EC2 Dashboard, select **Exports** in the left hand menu and find the export for ssh to the CSR: DC1-*stack-name*-CSR-VPC and copy the **Export value**
-![ssh key and ssh to CSR](./images/cloudformation-csrssh.png)
+1. From the EC2 Dashboard, select **Exports** in the left hand menu and find the export for ssh to the CSR: DC1-_stack-name_-CSR-VPC and copy the **Export value**
+   ![ssh key and ssh to CSR](./images/cloudformation-csrssh.png)
 
-1. Back on the **Cloud9** Browser tab paste this into the bash shell. Answer **yes** to the **Are you sure you want to continue connectiong (yes/no)?
+1. Back on the **Cloud9** Browser tab paste this into the bash shell. Answer **yes** to the \*\*Are you sure you want to continue connectiong (yes/no)?
 
 1. you now are connected to the Cisco CSR in the Datacenter VPC. We will be configuring the Cisco CSR.
 
 1. Lets look at the Interfaces by typing a the #prompt: **show ip interface brief** or **sh ip int br** for short. You will see the GigabitEhternet1 which is the interface our ipsec tunnel were traverse.
 
-1. Take a look at the route table on the CSR by typeing at the #prompt: **sh ip route**. You will see S* 0.0.0.0/0 which is a static default route pointing to the 10.4.0.1 address. This is the local VPC router which will connect the Interface to the Internet Gateway and use an Elastic IP address (its the IP address you used in the SSH command above). This is a one-to-one mapping.
+1. Take a look at the route table on the CSR by typeing at the #prompt: **sh ip route**. You will see S\* 0.0.0.0/0 which is a static default route pointing to the 10.4.0.1 address. This is the local VPC router which will connect the Interface to the Internet Gateway and use an Elastic IP address (its the IP address you used in the SSH command above). This is a one-to-one mapping.
 
 </p>
 </details>
@@ -273,32 +271,33 @@ In a real production environment we would setup a second router for redundancy a
 
 1. You will see the VPC Attachments listed, but we want to add one to connect our Datacenter. Click the **Create Transit Gateway Attachment** button above the list.
 
-1. Fill out the **Create Transit Gateway Attachment** form. 
-  - **Transit Gateway ID** will have a name Tag matching your first Cloudformation Stack name.
-  - **Attachment Type** is **VPN**
-  - **Customer Gateway** (CGW) will be **Exisiting. *note: the Cloudformation template created the CGW. it is the IP address of our Datacenter VPN device and in the lab matches the IP of the SSH command above. 
-  - Leave **Routing options** set to **Dynamic(requires BGP)**. *note: BGP is required if you want traffic to balance across more than one VPN tunnel at a time (ECMP or Equal Cost Multipathing)*
-  - For **Inside IP CIDR for Tunnel 1** use **169.254.10.0/30** and **169.254.11.0/30** for CIDR.
-  
-  - For **Pre-Shared Key for Tunnel 1** use **awsamazon**
-  - For **Inside IP CIDR for Tunnel 2** use **169.254.10.0/30** and **169.254.11.0/30** for CIDR.
-  - For **Pre-Shared Key for Tunnel 2** use **awsamazon**
+1. Fill out the **Create Transit Gateway Attachment** form.
+
+- **Transit Gateway ID** will have a name Tag matching your first Cloudformation Stack name.
+- **Attachment Type** is **VPN**
+- **Customer Gateway** (CGW) will be \**Exisiting. *note: the Cloudformation template created the CGW. it is the IP address of our Datacenter VPN device and in the lab matches the IP of the SSH command above.
+- Leave **Routing options** set to **Dynamic(requires BGP)**. _note: BGP is required if you want traffic to balance across more than one VPN tunnel at a time (ECMP or Equal Cost Multipathing)_
+- For **Inside IP CIDR for Tunnel 1** use **169.254.10.0/30** and **169.254.11.0/30** for CIDR.
+
+- For **Pre-Shared Key for Tunnel 1** use **awsamazon**
+- For **Inside IP CIDR for Tunnel 2** use **169.254.10.0/30** and **169.254.11.0/30** for CIDR.
+- For **Pre-Shared Key for Tunnel 2** use **awsamazon**
   Click **Create attachment**
   ![Create VPN Attachment](./images/tgw-createvpnattach.png)
 
-1. From the Menu on the Left Select **Site-to-Site VPN Connections**. From the main pane you will see the VPN is in State **pending**. That fine lets take a look toward the bottom, and click the **Tunnel Details** tab. Record the two **Outside IP Address**es. We want to record them in the order of the one pairing up with the **Inside IP CIDR** range 169.254.**10**.0/30 first. 
+1. From the Menu on the Left Select **Site-to-Site VPN Connections**. From the main pane you will see the VPN is in State **pending**. That fine lets take a look toward the bottom, and click the **Tunnel Details** tab. Record the two **Outside IP Address**es. We want to record them in the order of the one pairing up with the **Inside IP CIDR** range 169.254.**10**.0/30 first.
 
-1. While we are on the **Site-to-Site VPN Connections** page, lets go back to the top and give the VPN connection a name. If you click the pencil that appear when you mouse over the **Name** column, you can enter a name. Be sure to click the *check* mark to save the name. **THIS IS NOT SHOWING UP IN THE ASSOCIATIONS
+1. While we are on the **Site-to-Site VPN Connections** page, lets go back to the top and give the VPN connection a name. If you click the pencil that appear when you mouse over the **Name** column, you can enter a name. Be sure to click the _check_ mark to save the name. \*\*THIS IS NOT SHOWING UP IN THE ASSOCIATIONS
 
-1. From the Menu on the Left Select **Transit Gateway Route Tables**. From the table in the main pane select **Green Route Table**. Lets take a look toward the bottom, and click the **Associations** tab. Associations mean that traffic coming from the outside toward the Transit gateway will use this route table to know where the packet will go after routing through the TGW. *note: An attachment can only be Associated with one route table. But a route table can have multiple associations*. Here in the **Green Route Table**, We already have one association, The **Datacenter Services VPC**. Click **Create associations** in the **Associations** tab. From the drop-down list, select the vpn. *note:it should be the only one in the list without a **Association route table** .* Click **Create assocation**.
+1. From the Menu on the Left Select **Transit Gateway Route Tables**. From the table in the main pane select **Green Route Table**. Lets take a look toward the bottom, and click the **Associations** tab. Associations mean that traffic coming from the outside toward the Transit gateway will use this route table to know where the packet will go after routing through the TGW. _note: An attachment can only be Associated with one route table. But a route table can have multiple associations_. Here in the **Green Route Table**, We already have one association, The **Datacenter Services VPC**. Click **Create associations** in the **Associations** tab. From the drop-down list, select the vpn. _note:it should be the only one in the list without a **Association route table** ._ Click **Create assocation**.
 
 1. While at the **Transit Gateway Route Tables**, take a look at the **Propagations** tab. These are the Resources that Dynamically inform the route table. An attachment can propigate to multiple route tables. In this case, we want to propagate with all of the route tables, but lets start with the **Green Route Table**. We can see all of the VPCs are propagating their CIDR to the route table. Since the **Datacenter Services VPC** is also associated with this route table, we need to propagate the VPN routes to the **Green Route Table**
 
 1. Repeat the above step for the **Red Route Table** and the **Blue Route Table**
 
-1. Take a look at each of the route tables and notice the tab **Routes**. You can see the routes that are propagated, as well as a static route table that was created for you by the Cloudformation template. That's the default route (0.0.0.0/0) that will direct traffic destined for the internet to the **Datacenter Services VPC** and ultimately through the NAT Gateway in that VPC. *note: there is also a route table with no name. It is the dafult route table. In this lab we do not intend to use the default route table.
+1. Take a look at each of the route tables and notice the tab **Routes**. You can see the routes that are propagated, as well as a static route table that was created for you by the Cloudformation template. That's the default route (0.0.0.0/0) that will direct traffic destined for the internet to the **Datacenter Services VPC** and ultimately through the NAT Gateway in that VPC. \*note: there is also a route table with no name. It is the dafult route table. In this lab we do not intend to use the default route table.
 
-1. Back on the Cloud9 browser tab, using the two VPN tunnel endpoint address generated from the step above, cd to tgwwalk on the Cloud9 bash console and run the bash script, ./createcsr.sh. *note: Be sure to put the address that lines up with Inside IP CIDR address 169.254.10.0/30 for ip1*.
+1. Back on the Cloud9 browser tab, using the two VPN tunnel endpoint address generated from the step above, cd to tgwwalk on the Cloud9 bash console and run the bash script, ./createcsr.sh. _note: Be sure to put the address that lines up with Inside IP CIDR address 169.254.10.0/30 for ip1_.
 
 ```
 cd tgwwalk
@@ -306,31 +305,32 @@ cd tgwwalk
 ./createcsr.sh 1.1.1.1 2.2.2.2 mycsrconfig.txt
 ```
 
-1. On the left hand pane, the output file should be listed 
+1. On the left hand pane, the output file should be listed
 1. enter configuration mode
 
 ```
 config t
 ```
 
-1. Once in Configuration mode *note: you should see (config)# prompt*, paste in the text from the outputfile created in step 4. This will slowly paste in the configuration file. 
+1. Once in Configuration mode _note: you should see (config)# prompt_, paste in the text from the outputfile created in step 4. This will slowly paste in the configuration file.
 
-1. if you are still at the (config)# or (config-router) prompt, type **end** and press enter. 
+1. if you are still at the (config)# or (config-router) prompt, type **end** and press enter.
 
-1. Now lets look at the new interfaces: **sh ip int br**. You should see new interfaces: Tunnel1 and Tunnel2 and they both should show up. *note: if they do not chnage from down to up after a 2 minutes, likely casue is the ip addresses were flipped in the createcsr script. 
-![ssh key and ssh to CSR](./images/csr-showtunnel.png)
+1. Now lets look at the new interfaces: **sh ip int br**. You should see new interfaces: Tunnel1 and Tunnel2 and they both should show up. \*note: if they do not chnage from down to up after a 2 minutes, likely casue is the ip addresses were flipped in the createcsr script.
+   ![ssh key and ssh to CSR](./images/csr-showtunnel.png)
 
 1. Lets make sure we are seeing the routes on the Cisco CSR. first we can look at what BGP is seeing: **show ip bgp summary**. The most important thing to see is the State/PfxRcd (Prefixes received). If this is in Active or Idle (likely if neigbor statement is wrong: IP address, AS number) there is a configuration issue. What we want to see is a number. In fact if everything is setup correctly we should see 4 for each neighbor.
 
 </p>
 </details>
 
+### Build out DNS Infrastructure
+
 1. Launch a Bind DNS server into the Datacenter (DC1 VPC) using the cloudformation template 3.tgw-dns.yaml
 
 # To Do:
 
 1. add AWS Resolver from geseib/awsresolver to this environment with Bind server in Datacenter Services VPC which connects to on Prem Bind Server.
-2. add External routing through NAT Gateway/IGW in Datacenter services.
-3. add Second prod VPC from another account instructions
-4. add Shared VPC subnets in the non-prod VPC and give access from the account used in step 3.
-5. add a AD in on prem DC connected to AD in Datacenter Services and SSO
+1. add Second prod VPC from another account instructions
+1. add Shared VPC subnets in the non-prod VPC and give access from the account used in step 3.
+1. add a AD in on prem DC connected to AD in Datacenter Services and SSO
