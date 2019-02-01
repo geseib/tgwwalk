@@ -52,6 +52,8 @@ Mappings:
       SSMM: "com.amazonaws.ca-central-1.ssmmessages"
     "ap-southeast-1":
       AMI: "ami-01da99628f381e50a"
+      SSM: "com.amazonaws.ap-southeast-1.ssm"
+      SSMM: "com.amazonaws.ap-southeast-1.ssmmessages"
     "ap-southeast-2":
       AMI: "ami-00e17d1165b9dd3ec"
       SSM: "com.amazonaws.ap-southeast-2.ssm"
@@ -486,7 +488,7 @@ Resources:
       Path: "/"
       Roles:
         - !Ref ServerRoleNP2
- 
+
   NP2Ec2SecGroup:
     Type: AWS::EC2::SecurityGroup
     Properties:
@@ -1024,7 +1026,7 @@ Resources:
       Path: "/"
       Roles:
         - !Ref ServerRoleDC
-  
+
   DC1Ec2SecGroup:
     Type: AWS::EC2::SecurityGroup
     Properties:
@@ -1192,7 +1194,7 @@ Resources:
         Ref: PublicSubnetRouteTableDC1
 
   # DataCenter Services 1 Resources
-  # This VPC holds shared Services for all 
+  # This VPC holds shared Services for all
   VPCDCS1:
     Type: AWS::EC2::VPC
     Properties:
@@ -1505,8 +1507,7 @@ Resources:
         - Key: Name
           Value: !Join ["-", [DCS1, "AWS::StackName", NATGW]]
 
-  
-  DCS1NATInternetRoute:
+  DCS1NATInternetRouteAttach:
     Type: AWS::EC2::Route
     DependsOn: DCS1InternetGateway
     Properties:
@@ -1515,6 +1516,16 @@ Resources:
         Ref: DCS1NATGateway
       RouteTableId:
         Ref: AttachSubnetRouteTableDCS1
+
+  DCS1NATInternetRoutePrivate:
+    Type: AWS::EC2::Route
+    DependsOn: DCS1InternetGateway
+    Properties:
+      DestinationCidrBlock: 0.0.0.0/0
+      NatGatewayId:
+        Ref: DCS1NATGateway
+      RouteTableId:
+        Ref: PrivateSubnetRouteTableDCS1
 
 Outputs:
   # Non-Prod 1 Outputs
@@ -1540,6 +1551,12 @@ Outputs:
     Export:
       Name: !Sub "NP1-${AWS::StackName}-PrivateRouteTable"
 
+  ServerNP1:
+    Description: "NP1 EC2 IP address"
+    Value: !GetAtt ServerEc2NP1.PrimaryPrivateIpAddress
+    Export:
+      Name: !Sub "NP1-${AWS::StackName}-ServerIP"
+
   # Non-Prod 2 Outputs
   VPCNP2:
     Description: "The Created VPC"
@@ -1562,6 +1579,12 @@ Outputs:
     Value: !Ref PrivateSubnetRouteTableNP2
     Export:
       Name: !Sub "NP2-${AWS::StackName}-PrivateRouteTable"
+
+  ServerNP2:
+    Description: "NP2 EC2 IP address"
+    Value: !GetAtt ServerEc2NP2.PrimaryPrivateIpAddress
+    Export:
+      Name: !Sub "NP2-${AWS::StackName}-ServerIP"
 
   # Prod 1 Outputs
   VPCP1:
@@ -1586,13 +1609,19 @@ Outputs:
     Export:
       Name: !Sub "P1-${AWS::StackName}-PrivateRouteTable"
 
+  ServerP1:
+    Description: "P1 EC2 IP address"
+    Value: !GetAtt ServerEc2DCS1.PrimaryPrivateIpAddress
+    Export:
+      Name: !Sub "P1-${AWS::StackName}-ServerIP"
+
   # Datacenter 1 Outputs
   VPCDC1:
     Description: "The Created VPC"
     Value: !Ref VPCDC1
     Export:
       Name: !Sub "DC1-${AWS::StackName}-VPC"
-  
+
   DC1ServerSession:
     Description: session command for Server
     Value:
@@ -1616,18 +1645,18 @@ Outputs:
     Value: !Ref PrivateSubnetADC1
     Export:
       Name: !Sub "DC1-${AWS::StackName}-PrivateSubnetA"
-  PrivateSubnetADC1:
+  PrivateSubnetBDC1:
     Description: "DC1 Private Subnet B"
     Value: !Ref PrivateSubnetBDC1
     Export:
-      Name: !Sub "DC1-${AWS::StackName}-PrivateSubnetA"
+      Name: !Sub "DC1-${AWS::StackName}-PrivateSubnetB"
   PrivateSubnetRouteTableDC1:
     Description: "NP1 Private Route Table"
     Value: !Ref PrivateSubnetRouteTableDC1
     Export:
       Name: !Sub "DC1-${AWS::StackName}-PrivateRouteTable"
 
-# Datacenter Services 1 Outputs
+  # Datacenter Services 1 Outputs
   VPCDCS1:
     Description: "Datacenter Services VPC"
     Value: !Ref VPCDCS1
@@ -1644,6 +1673,16 @@ Outputs:
     Value: !Ref AttachSubnetBDCS1
     Export:
       Name: !Sub "DCS1-${AWS::StackName}-AttachSubnetB"
+  PrivateSubnetADCS1:
+    Description: "DCS1 Private Subnet A"
+    Value: !Ref PrivateSubnetADCS1
+    Export:
+      Name: !Sub "DCS1-${AWS::StackName}-PrivateSubnetA"
+  PrivateSubnetBDCS1:
+    Description: "DCS1 Private Subnet B"
+    Value: !Ref PrivateSubnetBDCS1
+    Export:
+      Name: !Sub "DCS1-${AWS::StackName}-PrivateSubnetB"
   PrivateSubnetRouteTableDCS1:
     Description: "DCS1 Private Route Table"
     Value: !Ref PrivateSubnetRouteTableDCS1

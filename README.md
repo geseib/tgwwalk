@@ -25,6 +25,9 @@ In our case, we are going to provide three types of VPCs:
 1. **Non-production VPCs**: We might create several of these to house our training environments, development, and QA resources.
 1. **Prodcution VPCs**: This is for our live production systems.
 1. **Shared Resources**: For resources and services that we want shared across all VPCs.
+
+Also, we need a VPC to represent our on-premise environment, a simulated datacenter.
+
 1. **Datacenter**: In this workshop we need to simulate a datacenter. In the real world, this would be our existing datacenter or colo and the hardware it contains. But we are going to make our own version in the cloud!
 
 ### IP addressing
@@ -210,7 +213,7 @@ Run Cloudformation template 2.tgw-csr.yaml to deploy the Transit Gateway, route 
 1. From the EC2 Dashboard, select **Exports** in the left hand menu and find the export for ssh to the CSR: DC1-_stack-name_-CSR-VPC and copy the **Export value**
    ![ssh key and ssh to CSR](./images/cloudformation-csrssh.png)
 
-1. Back on the **Cloud9** Browser tab paste this into the bash shell. Answer **yes** to the \*\*Are you sure you want to continue connectiong (yes/no)?
+1. Back on the **Cloud9** Browser tab paste this into the bash shell. _note: in the command you will notice the -i reference to the pem file you just copied, this is the private half of the key pair. The public key is on the Cisco CSR_. Answer **yes** to the \*\*Are you sure you want to continue connectiong (yes/no)?
 
 1. you now are connected to the Cisco CSR in the Datacenter VPC. We will be configuring the Cisco CSR.
 
@@ -249,9 +252,9 @@ In a real production environment we would setup a second router for redundancy a
 - Once the page is filled out, click **Create attachment** at the bottom right.
   ![Create VPN Attachment](./images/tgw-createvpnattach.png)
 
-1.  While we are on the **Transit Gateway Attachments** page, lets go back to the top and give the VPN connection a name. If you click the pencil that appear when you mouse over the **Name** column, you can enter a name. Be sure to click the _check_ mark to save the name.
+1.  While we are on the **Transit Gateway Attachments** page, lets go back to the top and give the VPN connection a name. Scan down the **Resource type** column for the VPN Attachment. \*note: you may have to hit the refresh icon in the upper right above the table to get the new VPN to show. If you click the pencil that appears when you mouse over the **Name** column, you can enter a name. Be sure to click the _check_ mark to save the name.
 
-1.  From the Menu on the Left Select **Site-to-Site VPN Connections**. From the main panel, you likely will see the VPN is in State **pending**. That fine. Lets take a look toward the bottom, and click the **Tunnel Details** tab. Record the two **Outside IP Address**es. We want to record them in the order of the one pairing up with the **Inside IP CIDR** range 169.254.**10**.0/30 first.
+1.  From the Menu on the Left Select **Site-to-Site VPN Connections**. From the main panel, you likely will see the VPN is in State **pending**. That fine. Lets take a look toward the bottom, and click the **Tunnel Details** tab. Record the two **Outside IP Address**es. We want to record them in the order of the one pairing up with the **Inside IP CIDR** range 169.254.**10**.0/30 first. _note: You can use cloud9 as a sratch pad, by clicking the + in the main panel and selecting **New file**. be sure to paste them in the right order!_
 
 1.  From the Menu on the Left Select **Transit Gateway Route Tables**. From the table in the main panel select **Green Route Table**. Lets take a look toward the bottom, and click the **Associations** tab. Associations mean that traffic coming from the outside toward the Transit gateway will use this route table to know where the packet will go after routing through the TGW. _note: An attachment can only be Associated with one route table. But a route table can have multiple associations_. Here in the **Green Route Table**, We already have one association, The **Datacenter Services VPC**. Click **Create associations** in the **Associations** tab. From the drop-down list, select the vpn. _note:it should be the only one in the list without a **Association route table** ._ Click **Create assocation**.
     ![Associate VPN](./images/tgw-vpnassocationspending.png)
@@ -365,6 +368,8 @@ In a real production environment we would setup a second router for redundancy a
           ip-10-4-0-17#
           ```
 
+1.  Just to verify where those routes are coming from, we can take a look at the **Green Route Table**. _note: remember, it's under the **VPC** service and **Transit Gateway Route Tables** at the bottom of the left menu._ There should be **5** routes listed. Any ideas why only **4** show up on the CSR?
+
 </p>
 </details>
 
@@ -390,9 +395,8 @@ While the CloudFormation Template created attachments to the VPCs and route tabl
 
 - NP2-_stack_name_-Private
 - P1-_stack_name_-Private
-- DCS1-_stack_name_\_Private
 
-1. For the **DCS1-_stack_name_-Public, where our NAT Gateway is, we need a special route. We already have a default route pointed at the Internet Gateway(IGW) to get to the internet, so we need a more specific route to route internally. Lets use the while rfc 1918 10.0.0.0/8 CIDR as that can only be internal. Follow the steps above for the **DCS1-_stack_name_-Public route table. Be sure not to alter the **0.0.0.0/0** route pointed to the IGW for this route table.
+1. For the **DCS1-_stack_name_-Public** and **DCS1-_stack_name_-Private** where our NAT Gateway is, we need a special route. We already have a default route pointed at the Internet Gateway(IGW) for the public and to the Nat Gateway(NGW) for the private to get to the internet, so we need a more specific entry to route internally. Lets use the rfc 1918 10.0.0.0/8 CIDR as that can only be internal and allows for future exapansion without changes. Follow the steps above for both Route tables. Be sure not to alter the **0.0.0.0/0** route pointed to the IGW org NGW for these route tables.
 
 1. Beacuse the Cloudformation template setup a Security Group to allow ICMP traffic from 10.0.0.0/8, we should now be able to test pings from lots of place.
 
@@ -416,7 +420,8 @@ While the CloudFormation Template created attachments to the VPCs and route tabl
 
 1. Let Ping a server. Every one second or so, you should see a new line showing the reply and roundtrip time.
 
-```ping 10.16.18.220
+```
+ping 10.16.18.220
 sh-4.2$ ping 10.16.18.220
 PING 10.16.18.220 (10.16.18.220) 56(84) bytes of data.
 64 bytes from 10.16.18.220: icmp_seq=1 ttl=254 time=1.09 ms
@@ -431,6 +436,12 @@ PING 10.16.18.220 (10.16.18.220) 56(84) bytes of data.
 7 packets transmitted, 7 received, 0% packet loss, time 6042ms
 rtt min/avg/max/mdev = 0.673/0.824/1.096/0.130 ms
 ```
+
+      Troubleshooting: if you are unable to ping a server here are a few things to check:
+      - Go to the **EC2** service and reverify the private IP address of the device you want to ping from
+      - Go to the **VPC** service and verify that you have the 0.0.0.0/0 route point to the TGW for VPCs NP1,NP2, and P1. Verify that you have the 10.0.0.0/8 route in the DCS VPC for both public and private subnets while you are here.
+      - Finally, Verify that you went through the check for the TGW route tables propagation and the CSR is receiving routes (see the **Setup VPN Between Datacenter and Transit Gateway** section above)
+
 
 1. If you tested between the P1 server and a NP1 or NP2 server, you should have also seen a reply ping. But thats not what we wanted. Take a look at the VPC route table, the Associated Transit Gateway Route table (_for P1 this should be Blue, for NP1 or NP2 this should be Red_) Follow the logic to understand whats going on.
 
@@ -455,8 +466,8 @@ rtt min/avg/max/mdev = 0.673/0.824/1.096/0.130 ms
 
 1. be sure to repeat the blackhole route in the **Red Route Table** by creating a blackhole route for 10.8.0.0/13.
 
-     </p>
-     </details>
+   </p>
+   </details>
 
 </p>
 </details>
@@ -464,6 +475,15 @@ rtt min/avg/max/mdev = 0.673/0.824/1.096/0.130 ms
 ### Build out DNS Infrastructure
 
 1. Launch a Bind DNS server into the Datacenter (DC1 VPC) using the cloudformation template 3.tgw-dns.yaml
+
+### Removal
+
+1. Before deleting the Cloudformation templates, Delete the Site-to-Site VPN from the VPC services console.
+
+1. Delete the Cloudformation templates in reverse order:
+   - 3.tgw-vpn.yaml
+   - 2.tgw-csr.yaml
+   - 1.tgw-vpcs.yaml
 
 # To Do:
 

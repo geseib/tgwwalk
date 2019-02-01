@@ -197,7 +197,45 @@ Resources:
     Properties:
       RouteTableId:
         Fn::ImportValue: !Sub "DC1-${ParentStack}-PrivateRouteTable"
+      DestinationCidrBlock: 10.0.0.0/11
+      NetworkInterfaceId:
+        Ref: CSRENI
+  
+  DC1NATEIP:
+    Type: "AWS::EC2::EIP"
+    Properties:
+      Domain: vpc
+
+  DC1NATGateway:
+    Type: "AWS::EC2::NatGateway"
+    Properties:
+      AllocationId:
+        Fn::GetAtt:
+          - DC1NATEIP
+          - AllocationId
+      SubnetId:
+        Fn::ImportValue: !Sub "DC1-${ParentStack}-PublicSubnetA"
+      Tags:
+        - Key: Name
+          Value: !Join ["-", [DC1, "AWS::StackName", NATGW]]
+
+  PrivateDefaultRoute:
+    Type: AWS::EC2::Route
+    DependsOn: DC1NATGateway
+    Properties:
+      RouteTableId:
+        Fn::ImportValue: !Sub "DC1-${ParentStack}-PrivateRouteTable"
       DestinationCidrBlock: 0.0.0.0/0
+      NatGatewayId:
+        Ref: DC1NATGateway
+
+  PrivateAWSRoute:
+    Type: AWS::EC2::Route
+    DependsOn: CSRENI
+    Properties:
+      RouteTableId:
+        Fn::ImportValue: !Sub "DC1-${ParentStack}-PrivateRouteTable"
+      DestinationCidrBlock: 10.0.0.0/11
       NetworkInterfaceId:
         Ref: CSRENI
 

@@ -79,13 +79,26 @@ Resources:
           FromPort: "53"
           ToPort: "53"
           CidrIp: 0.0.0.0/0
+
+  BindENI:
+    Type: AWS::EC2::NetworkInterface
+    Properties:
+      SubnetId:
+        Fn::ImportValue: !Sub "DC1-${VPCName}-PrivateSubnetA"
+      Description: Interface for Bind Server
+      GroupSet:
+        - Ref: BindSecGroup
+      SourceDestCheck: true
+      Tags:
+        - Key: Name
+          Value: Bind
+
   BindEc2:
     Type: AWS::EC2::Instance
     Properties:
-      SubnetId:
-        "Fn::ImportValue": !Sub "DC1-${VPCName}-PublicSubnetA"
-      SecurityGroupIds:
-        - Ref: BindSecGroup
+      NetworkInterfaces:
+        - NetworkInterfaceId: !Ref BindENI
+          DeviceIndex: 0
       ImageId: !FindInMap [RegionMap, !Ref "AWS::Region", AMI]
       InstanceType: t2.large
       IamInstanceProfile:
@@ -122,6 +135,10 @@ Resources:
               - " allow-notify { none; };\n"
               - " allow-recursion { any; };\n"
               - "};\n"
+              - "zone \"aws.example.com\" in {\n"
+              - "type forward;\n"
+              - "forwarders { 1.1.1.1; 2.2.2.2; };\n"
+              - "};\n"
               - "EOF\n"
               - "systemctl start named\n"
       Tags:
@@ -129,7 +146,104 @@ Resources:
           Value:
             Ref: "AWS::StackName"
 
+  ResolverSecGroup:
+    Type: AWS::EC2::SecurityGroup
+    Properties:
+      GroupDescription: Open-up ports for bind
+      GroupName: !Join ["-", [Ref: "AWS::StackName", "dns-sec-group"]]
+      VpcId:
+        "Fn::ImportValue": !Sub "DCS1-${VPCName}-VPC"
+      SecurityGroupIngress:
+        - IpProtocol: tcp
+          FromPort: "53"
+          ToPort: "53"
+          CidrIp: 10.4.0.0/0
+        - IpProtocol: udp
+          FromPort: "53"
+          ToPort: "53"
+          CidrIp: 10.4.0.0/0
+
+  DNSOutboundEndpoint:
+    Type: "AWS::Route53Resolver::ResolverEndpoint"
+    Properties:
+      Direction: "outbound"
+      IpAddresses:
+        - SubnetId:
+            "Fn::ImportValue": !Sub "DCS1-${VPCName}-PrivateSubnetA"
+        - SubnetId:
+            "Fn::ImportValue": !Sub "DCS1-${VPCName}-PrivateSubnetB"
+      Name: !Join ["-", [Ref: "AWS::StackName", "outendpoint"]]
+      SecurityGroupIds:
+        - !Ref ResolverSecGroup
+
+  DNSInboundEndpoint:
+    Type: "AWS::Route53Resolver::ResolverEndpoint"
+    Properties:
+      Direction: "inbound"
+      IpAddresses:
+        - SubnetId:
+            "Fn::ImportValue": !Sub "DCS1-${VPCName}-PrivateSubnetA"
+        - SubnetId:
+            "Fn::ImportValue": !Sub "DCS1-${VPCName}-PrivateSubnetB"
+      Name: !Join ["-", [Ref: "AWS::StackName", "inendpoint"]]
+      SecurityGroupIds:
+        - !Ref ResolverSecGroup
+
+  DNSRule1:
+    Type: "AWS::Route53Resolver::ResolverRule"
+    Properties:
+      DomainName: "."
+      Name: !Join ["-", [Ref: "AWS::StackName", "wildcard"]]
+      ResolverEndpointId: !GetAtt DNSOutboundEndpoint.ResolverEndpointId
+      RuleType: "FORWARD"
+      TargetIps:
+        - Ip: !GetAtt BindENI.PrimaryPrivateIpAddress
+          Port: "53"
+
+  DNSRule2:
+    Type: "AWS::Route53Resolver::ResolverRule"
+    Properties:
+      DomainName: "amazonaws.com"
+      Name: !Join ["-", [Ref: "AWS::StackName", "amazon"]]
+      RuleType: "SYSTEM"
+
+  DNSRule3:
+    Type: "AWS::Route53Resolver::ResolverRule"
+    Properties:
+      DomainName: "aws.seibtribe.com"
+      Name: !Join ["-", [Ref: "AWS::StackName", "seibtribe"]]
+      RuleType: "SYSTEM"
+
 Outputs:
+  Rule1:
+    Description: rule 1 associate command
+    Value:
+      Fn::Join:
+        - " "
+        - - "aws route53resolver associate-resolver-rule --resolver-rule-id"
+          - !GetAtt DNSRule1.ResolverRuleId
+          - "--vpc-id"
+          - Fn::ImportValue: !Sub "DCS1-${VPCName}-VPC"
+  Rule2:
+    Description: rule 2 associate command
+    Value:
+      Fn::Join:
+        - " "
+        - - "aws route53resolver associate-resolver-rule --resolver-rule-id"
+          - !GetAtt DNSRule2.ResolverRuleId
+          - "--vpc-id"
+          - Fn::ImportValue: !Sub "DCS1-${VPCName}-VPC"
+
+  Rule3:
+    Description: rule 3 associate command
+    Value:
+      Fn::Join:
+        - " "
+        - - "aws route53resolver associate-resolver-rule --resolver-rule-id"
+          - !GetAtt DNSRule3.ResolverRuleId
+          - "--vpc-id"
+          - Fn::ImportValue: !Sub "DCS1-${VPCName}-VPC"
+
   BindSession:
     Description: session command
     Value:
@@ -139,8 +253,9 @@ Outputs:
           - !Ref BindEc2
     Export:
       Name: !Sub "${VPCName}-bind-session"
+
   BindIP:
     Description: BindServer Ip Address
-    Value: !GetAtt BindEc2.PrivateIp
+    Value: !GetAtt BindENI.PrimaryPrivateIpAddress
     Export:
-      Name: !Sub "${VPCName}-nameServerIP"
+      Name: !Sub "${VPCName}-bind-ip"
