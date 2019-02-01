@@ -45,6 +45,7 @@ Mappings:
       AMI: "ami-01bbe152bf19d0289"
 
 Resources:
+  # Datacenter Bind Server Setup
   DNSServerRole:
     Type: AWS::IAM::Role
     Properties:
@@ -183,6 +184,58 @@ Resources:
           Value:
             Ref: "AWS::StackName"
 
+  # Datacenter AWS Resolver to connect to Bind Server locally
+
+  DC1ResolverSecGroup:
+    Type: AWS::EC2::SecurityGroup
+    Properties:
+      GroupDescription: Open-up ports for bind
+      GroupName: !Join ["-", [Ref: "AWS::StackName", "dc-dns-sec-group"]]
+      VpcId:
+        "Fn::ImportValue": !Sub "DC1-${VPCName}-VPC"
+      SecurityGroupIngress:
+        - IpProtocol: tcp
+          FromPort: "53"
+          ToPort: "53"
+          CidrIp: 10.4.0.0/0
+        - IpProtocol: udp
+          FromPort: "53"
+          ToPort: "53"
+          CidrIp: 10.4.0.0/0
+
+  DC1DNSOutboundEndpoint:
+    Type: "AWS::Route53Resolver::ResolverEndpoint"
+    Properties:
+      Direction: "outbound"
+      IpAddresses:
+        - SubnetId:
+            "Fn::ImportValue": !Sub "DC1-${VPCName}-PrivateSubnetA"
+        - SubnetId:
+            "Fn::ImportValue": !Sub "DC1-${VPCName}-PrivateSubnetB"
+      Name: !Join ["-", [Ref: "AWS::StackName", "dc1outendpoint"]]
+      SecurityGroupIds:
+        - !Ref DC1ResolverSecGroup
+
+  DC1DNSRule:
+    Type: "AWS::Route53Resolver::ResolverRule"
+    Properties:
+      DomainName: !Ref "Zone"
+      Name: "dccorpdomain"
+      ResolverEndpointId: !GetAtt DC1DNSOutboundEndpoint.ResolverEndpointId
+      RuleType: "FORWARD"
+      TargetIps:
+        - Ip: !GetAtt BindENI.PrimaryPrivateIpAddress
+          Port: "53"
+
+  DNSRule3AssociateDC1:
+    Type: "AWS::Route53Resolver::ResolverRuleAssociation"
+    Properties:
+      Name: !Join ["-", [Ref: "AWS::StackName", "corpdomainAssociateDC1"]]
+      ResolverRuleId: !GetAtt DC1DNSRule.ResolverRuleId
+      VPCId:
+        "Fn::ImportValue": !Sub "DC1-${VPCName}-VPC"
+
+  # DCS-1 AWS Resolver setup
   ResolverSecGroup:
     Type: AWS::EC2::SecurityGroup
     Properties:
@@ -278,7 +331,7 @@ Resources:
   DNSRule3AssociateNP2:
     Type: "AWS::Route53Resolver::ResolverRuleAssociation"
     Properties:
-      Name: !Join ["-", [Ref: "AWS::StackName", "exampleAssociateNP2"]]
+      Name: !Join ["-", [Ref: "AWS::StackName", "corpdomainAssociateNP2"]]
       ResolverRuleId: !GetAtt DNSRule3.ResolverRuleId
       VPCId:
         "Fn::ImportValue": !Sub "NP2-${VPCName}-VPC"
@@ -286,7 +339,7 @@ Resources:
   DNSRule3AssociateNP1:
     Type: "AWS::Route53Resolver::ResolverRuleAssociation"
     Properties:
-      Name: !Join ["-", [Ref: "AWS::StackName", "exampleAssociateNP1"]]
+      Name: !Join ["-", [Ref: "AWS::StackName", "corpdomainAssociateNP1"]]
       ResolverRuleId: !GetAtt DNSRule3.ResolverRuleId
       VPCId:
         "Fn::ImportValue": !Sub "NP1-${VPCName}-VPC"
@@ -294,7 +347,7 @@ Resources:
   DNSRule3AssociateDCS:
     Type: "AWS::Route53Resolver::ResolverRuleAssociation"
     Properties:
-      Name: !Join ["-", [Ref: "AWS::StackName", "exampleAssociate"]]
+      Name: !Join ["-", [Ref: "AWS::StackName", "corpdomainAssociate"]]
       ResolverRuleId: !GetAtt DNSRule3.ResolverRuleId
       VPCId:
         "Fn::ImportValue": !Sub "DCS1-${VPCName}-VPC"
@@ -302,7 +355,7 @@ Resources:
   DNSRule3AssociateP1:
     Type: "AWS::Route53Resolver::ResolverRuleAssociation"
     Properties:
-      Name: !Join ["-", [Ref: "AWS::StackName", "exampleAssociate"]]
+      Name: !Join ["-", [Ref: "AWS::StackName", "corpdomainAssociate"]]
       ResolverRuleId: !GetAtt DNSRule3.ResolverRuleId
       VPCId:
         "Fn::ImportValue": !Sub "P1-${VPCName}-VPC"
