@@ -252,7 +252,7 @@ Resources:
     Type: "AWS::Route53Resolver::ResolverRule"
     Properties:
       DomainName: !Ref "Zone"
-      Name: !Join ["-", [Ref: "AWS::StackName", Ref: "Zone"]]
+      Name: "corpdomain"
       ResolverEndpointId: !GetAtt DNSOutboundEndpoint.ResolverEndpointId
       RuleType: "FORWARD"
       TargetIps:
@@ -322,9 +322,9 @@ Resources:
   NP1DNSRecord:
     Type: AWS::Route53::RecordSet
     Properties:
-      HostedZoneName: !Ref "DNSZone"
-      Comment: DNS name for my NP1.
-      Name: !Join ["", [NP1, ., !Ref "Zone", .]]
+      HostedZoneId: !Ref "DNSZone"
+      Comment: DNS name for NP1 Server.
+      Name: !Join ["", [np1.aws., !Ref "Zone", .]]
       Type: A
       TTL: "600"
       ResourceRecords:
@@ -333,24 +333,24 @@ Resources:
   NP2DNSRecord:
     Type: AWS::Route53::RecordSet
     Properties:
-      HostedZoneName: !Ref "DNSZone"
-      Comment: DNS name for my NP2.
-      Name: !Join ["", [NP2, ., !Ref "Zone", .]]
+      HostedZoneId: !Ref "DNSZone"
+      Comment: DNS name for NP2 Server.
+      Name: !Join ["", [np2.aws., !Ref "Zone", .]]
       Type: A
       TTL: "600"
       ResourceRecords:
         - "Fn::ImportValue": !Sub "NP2-${VPCName}-ServerIP"
 
-  NP2DNSRecord:
+  P1DNSRecord:
     Type: AWS::Route53::RecordSet
     Properties:
-      HostedZoneName: !Ref "DNSZone"
-      Comment: DNS name for my NP2.
-      Name: !Join ["", [NP2, ., !Ref "Zone", .]]
+      HostedZoneId: !Ref "DNSZone"
+      Comment: DNS name for P1 Server.
+      Name: !Join ["", [p1.aws., !Ref "Zone", .]]
       Type: A
       TTL: "600"
       ResourceRecords:
-        - "Fn::ImportValue": !Sub "NP2-${VPCName}-ServerIP"
+        - "Fn::ImportValue": !Sub "P1-${VPCName}-ServerIP"
 
 Outputs:
   BindSession:

@@ -438,10 +438,11 @@ rtt min/avg/max/mdev = 0.673/0.824/1.096/0.130 ms
 ```
 
       Troubleshooting: if you are unable to ping a server here are a few things to check:
-      - Go to the **EC2** service and reverify the private IP address of the device you want to ping from
-      - Go to the **VPC** service and verify that you have the 0.0.0.0/0 route point to the TGW for VPCs NP1,NP2, and P1. Verify that you have the 10.0.0.0/8 route in the DCS VPC for both public and private subnets while you are here.
+      - Go to the EC2 service and reverify the private IP address of the device you want to ping from
+      - Go to the       VPC service and verify that you have the 0.0.0.0/0 route point to the TGW for VPCs NP1,NP2, and P1. Verify that you have the 10.0.0.0/8 route in the DCS VPC for both public and private subnets while you are here.
       - Finally, Verify that you went through the check for the TGW route tables propagation and the CSR is receiving routes (see the **Setup VPN Between Datacenter and Transit Gateway** section above)
 
+1. You can also verify Internet access by using the curl command on the NP1, NP2 or P1 (the Datacenter Server wont use the Transit Gateway to get to the internet, but should still work). If you curl https://cloudformation.us-east-1.amazonaws.com it should return healthy.
 
 1. If you tested between the P1 server and a NP1 or NP2 server, you should have also seen a reply ping. But thats not what we wanted. Take a look at the VPC route table, the Associated Transit Gateway Route table (_for P1 this should be Blue, for NP1 or NP2 this should be Red_) Follow the logic to understand whats going on.
 

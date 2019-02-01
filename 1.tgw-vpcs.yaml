@@ -1553,7 +1553,7 @@ Outputs:
 
   ServerNP1:
     Description: "NP1 EC2 IP address"
-    Value: !GetAtt ServerEc2NP1.PrimaryPrivateIpAddress
+    Value: !GetAtt ServerEc2NP1.PrivateIp
     Export:
       Name: !Sub "NP1-${AWS::StackName}-ServerIP"
 
@@ -1582,7 +1582,7 @@ Outputs:
 
   ServerNP2:
     Description: "NP2 EC2 IP address"
-    Value: !GetAtt ServerEc2NP2.PrimaryPrivateIpAddress
+    Value: !GetAtt ServerEc2NP2.PrivateIp
     Export:
       Name: !Sub "NP2-${AWS::StackName}-ServerIP"
 
@@ -1611,7 +1611,7 @@ Outputs:
 
   ServerP1:
     Description: "P1 EC2 IP address"
-    Value: !GetAtt ServerEc2DCS1.PrimaryPrivateIpAddress
+    Value: !GetAtt ServerEc2DCS1.PrivateIp
     Export:
       Name: !Sub "P1-${AWS::StackName}-ServerIP"
 
