@@ -736,3 +736,10 @@ test.kneetow.com.           60      IN      A       10.4.12.187
 1. add Shared VPC subnets in the non-prod VPC and give access from the account used in step 3.
 1. add a AD in on prem DC connected to AD in Datacenter Services and SSO
 ```
+
+</p>
+</details>
+
+# Congratulations
+
+You now have **completed** this section. Continue to the [Multi-Account section](./Multi-Account/README.md) to connect in another AWS account to our Transit Gateway.
