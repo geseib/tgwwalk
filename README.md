@@ -1,8 +1,22 @@
 # Transit Gateway, a walkthrough
 
-This walkthrough shows how to setup Transit Gateway with multiple VPC and Routing domains as well as connect the Transit Gateway to the Datacenter via VPN.
+This workshop shows how to setup communication between multiple VPCs and On-premise resources in our Datacenter. We will explore how we can have different routing policies for different environments such as Non-production and production.
+
+Next, we will make sure that we can easily communicate using DNS names vs IP addresses, without having to deploy and manage Virtual DNS servers on EC2. Finally, we will explore how resources in Multiple AWS accounts can communicate
+
+# Phase 1: Single Account, Multiple VPCs
 
 ![Speficy Details Screenshot](./images/hybrid-tgw-diagram.png)
+
+## AWS Services Explored
+
+- **Amazon Virtual Private Cloud (VPC)** - logically isolated section of the AWS Cloud
+- **AWS Transit Gateway** - connectivity and routing between VPCs and Datacenter
+- **AWS Site-to-Site VPN** - (connection our datacenter to our VPCs)
+- **Amazon Route 53 Resolver** - DNS integration between AWS and on-prem (Datacenter)
+- **AWS Cloud9** - Cloud Development environment we will use to edit files and access the Datacenter VPN Virtual Device
+- **AWS Systems Manager, Session Manager** - Secure server shell access without SSH keys to manager
+- **AWS CloudFormation** - A common language to model your entire infrastructure in a text file.
 
 ## Introduction
 
@@ -79,6 +93,8 @@ Since we will be deploying Cloud9 into our Datacenter VPC, we need to pick one o
 - Singapore (ap-southeast-1)
 
 ### 1. Delete Default VPC
+
+A default VPC is automatically created for each region in your account. Some customers choose to remove the Default VPC and replace with ones they have planned out to keep things simple and secure. We are going to remove the default VPC for another reason: the number of VPCs per region in an account is soft limited to 5 and our Lab uses five VPCs. If you require more than five in your own accounts, its easy to increase them by making a limit request through the support console, while logged into your account: https://console.aws.amazon.com/support/cases#/create.
 
 <details>
 <summary>HOW TO Delete Default VPC</summary><p>
