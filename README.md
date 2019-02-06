@@ -2,9 +2,7 @@
 
 This workshop shows how to setup communication between multiple VPCs and On-premise resources in our Datacenter. We will explore how we can have different routing policies for different environments such as Non-production and production.
 
-Next, we will make sure that we can easily communicate using DNS names vs IP addresses, without having to deploy and manage Virtual DNS servers on EC2. Finally, we will explore how resources in Multiple AWS accounts can communicate
-
-# Phase 1: Single Account, Multiple VPCs
+Next, we will make sure that we can easily communicate using DNS names vs IP addresses, without having to deploy and manage Virtual DNS servers on EC2. Finally, we will explore how resources in Multiple AWS accounts can communicate.
 
 ![Speficy Details Screenshot](./images/hybrid-tgw-diagram.png)
 
@@ -77,15 +75,19 @@ AWS Transit Gateway is a service that enables customers to connect their Amazon 
 
 - **route propagation** — A VPC or VPN connection can dynamically propagate routes to a transit gateway route table. With a VPC, you must create static routes to send traffic to the transit gateway. With a VPN connection, routes are propagated from the transit gateway to your on-premises router using Border Gateway Protocol (BGP).
 
-![Specify Details Screenshot](./images/hybrid-tgw-diagram.png)
+# Modules
 
 This workshop is broken up into multiple modules. You must complete each module before proceeding to the next. The first module has a slidedeck to understand the context, then second module explores the use of Amazon Comprehend, the next model helps you build a TensorFlow Model in Sagemaker, and in the last module we build the complete voice-of-the-customer application using a CloudFormation template.
 
-1. [Setup the Environment](./1.setup) - 15 mins
-2. [Connect a Single Account and Multiple VPCs to a Datacenter](2.singleaccount) - 60 mins
-3. [Setup DNS communication between the Datacenter and the VPCs](3.dns) - 30 mins
-4. [setup Multiaccount Communications](4.multiaccount) - 30 mins
-5. [Active Directory Integration](Coming soon)
+## 1. [Setup the Environment](./1.setup) - 15 mins
+
+## 2. [Connect a Single Account and Multiple VPCs to a Datacenter](2.singleaccount) - 60 mins
+
+## 3. [Setup DNS communication between the Datacenter and the VPCs](3.dns) - 30 mins
+
+## 4. [setup Multiaccount Communications](4.multiaccount) - 30 mins
+
+## 5. Active Directory Integration(Coming soon)
 
 ## Removal
 

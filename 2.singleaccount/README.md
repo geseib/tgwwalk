@@ -477,4 +477,4 @@ rtt min/avg/max/mdev = 0.673/0.824/1.096/0.130 ms
 
 # Congratulations
 
-You now have **completed** this section. Continue to the [Setup DNS communication between the Datacenter and the VPCs](3.dns) to setup DNS between your Datacenter and the Cloud.
+You now have **completed** this section. Continue to the [Setup DNS communication between the Datacenter and the VPCs](../3.dns) to setup DNS between your Datacenter and the Cloud.

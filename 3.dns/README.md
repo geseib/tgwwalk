@@ -106,4 +106,4 @@ test.kneetow.com.           60      IN      A       10.4.12.187
 
 ### Next Steps
 
-You now have **completed** this section. Continue to the [Setup Multiaccount Communications](4.multiaccount) to connect in another AWS account to our Transit Gateway.
+You now have **completed** this section. Continue to the [Setup Multiaccount Communications module](../4.multiaccount) to connect in another AWS account to our Transit Gateway.
