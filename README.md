@@ -8,21 +8,21 @@ Next, we will make sure that we can easily communicate using DNS names vs IP add
 
 ## AWS Services Explored
 
-- **Amazon Virtual Private Cloud (VPC)** - logically isolated section of the AWS Cloud
-- **AWS Transit Gateway** - connectivity and routing between VPCs and Datacenter
-- **AWS Site-to-Site VPN** - (connection our datacenter to our VPCs)
-- **Amazon Route 53 Resolver** - DNS integration between AWS and on-prem (Datacenter)
-- **AWS Cloud9** - Cloud Development environment we will use to edit files and access the Datacenter VPN Virtual Device
-- **AWS Systems Manager, Session Manager** - Secure server shell access without SSH keys to manager
-- **AWS CloudFormation** - A common language to model your entire infrastructure in a text file.
-- **AWS Privatlink** - Connect to AWS endpoint via a endpoint inside a VPC instead of via a public endpoint.
+- **Amazon Virtual Private Cloud (VPC)** - logically isolated section of the AWS Cloud.
+- **AWS Transit Gateway** - connectivity and routing between VPCs and Datacenter.
+- **AWS Site-to-Site VPN** - (connection our datacenter to our VPCs).
+- **Amazon Route 53 Resolver** - DNS integration between AWS and on-prem (Datacenter).
+- **AWS Cloud9** - cloud Development environment we will use to edit files and access the Datacenter VPN Virtual Device.
+- **AWS Systems Manager, Session Manager** - secure server shell access without SSH keys to manager
+- **AWS CloudFormation** - a common language to model your entire infrastructure in a text file..
+- **AWS Privatelink** - provides private connectivity between VPCs and AWS services.
 
 ## Introduction
 
 When building a multi-VPC and/or multi-account architecture there are several services that we need to consider to provide seamless integration between our AWS environment and the existing infrastrucutre in our datacenter.
 Foundationally, we need to provide robust connectivity and routing between the datacenter and all of the VPCs. But we also need to provide and control routing between those VPC. For example we may have a 'Shared Services' VPC that every other VPC needs access to where we place common resources that everyone needs, such as a NAT Gateway Service to access the internet. At the same time, we dont want just any VPC talking to any other VPC. In this case, we don't want our 'Non-Production' VPCs talking to our 'Production' VPCs.
 
-In the past, customers used thrid-party solutions and/or transit VPCs that they build and managed. In order to remove much of that undifferentiated heavy lifting, we will use **AWS Transit Gateway** Service to provide this connectivty and routing. **AWS Transit Gateway** is a service that enables custoemrs to connect their Amazon Virtual Private Clouds(VPCs) and their on-premise networks to a single highly-available gateway. **AWS Transit Gateway** provides easier connectivity, better visibility, more control, and on-demand bandwidth.
+In the past, customers used third-party solutions and/or transit VPCs that they build and managed. In order to remove much of that undifferentiated heavy lifting, we will use **AWS Transit Gateway** Service to provide this connectivty and routing. **AWS Transit Gateway** is a service that enables customers to connect their Amazon Virtual Private Clouds(VPCs) and their on-premise networks to a highly-available gateway. **AWS Transit Gateway** provides easier connectivity, better visibility, more control, and on-demand bandwidth.
 
 After we have connectivity and routing, we need to provide seamless DNS resolution between our Datacenter the VPCs. Our on-prem devices will want to reach out to our resources in the cloud using DNS names, not IP addresses and the resources in the cloud will want to do the same for servers back in our datacenter. Avoiding hard-coding IP addresses in our applications is best practice. To do this we will use **Amazon Route53 Resolver**. **Amazon Route53 Resolver** for hybrid clouds allows us to create highly-available endpoints in our VPCs to integrate with the Amazon Provided DNS (sometmes referred to as the .2 resolver, since it is always 2 addresses up from the VPC CIDR block. i.e. 172.16.0.2 for VPC CIDR 172.16.0.0/24)
 
@@ -47,7 +47,7 @@ Also, we need a VPC to represent our on-premise environment, a simulated datacen
 
 ![Speficy Details Screenshot](./images/hybrid-subnets-diagram.png)
 
-Carving up and assigning private IP address(RFC 1918 addresses) space is big subject and can be daunting of you have a large enterprise today, espeically with mergers. Even when you have a centralized IP address management system (IPAM), you will find undocumented address space being used and sometimes finding useable space is difficult. However we want to find large non-fragmented spaces so we can create a well-summarized network. Don't laugh, we all like a challenge, right?
+Carving up and assigning private IP address(RFC 1918 addresses) space is big subject and can be daunting of you have a large enterprise today, especially with mergers. Even when you have a centralized IP address management system (IPAM), you will find undocumented address space being used and sometimes finding useable space is difficult. However we want to find large non-fragmented spaces so we can create a well-summarized network. Don't laugh, we all like a challenge, right?
 In our case we found that the 10.0.0.0/11 space was available (I know, fiction, right?). So, we are going to carve up /13's for our production and non-production and we will grab a /16's for our shared service and a /16 for our simulated datacenter.
 What does that mean?
 
