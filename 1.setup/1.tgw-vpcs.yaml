@@ -1655,6 +1655,11 @@ Outputs:
     Value: !Ref PrivateSubnetRouteTableDC1
     Export:
       Name: !Sub "DC1-${AWS::StackName}-PrivateRouteTable"
+  PublicSubnetRouteTableDC1:
+    Description: "NP1 Public Route Table"
+    Value: !Ref PublicSubnetRouteTableDC1
+    Export:
+      Name: !Sub "DC1-${AWS::StackName}-PublicRouteTable"
 
   # Datacenter Services 1 Outputs
   VPCDCS1:

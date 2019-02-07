@@ -84,6 +84,8 @@ Resources:
           FromPort: "53"
           ToPort: "53"
           CidrIp: 0.0.0.0/0
+        - IpProtocol: -1
+          CidrIp: 10.0.0.0/16
 
   BindENI:
     Type: AWS::EC2::NetworkInterface

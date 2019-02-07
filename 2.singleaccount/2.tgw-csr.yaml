@@ -155,7 +155,7 @@ Resources:
         - IpProtocol: tcp
           FromPort: "22"
           ToPort: "22"
-          CidrIp: 0.0.0.0/0
+          CidrIp: 10.4.0.0/16
 
   CSRENI:
     Type: AWS::EC2::NetworkInterface
@@ -235,6 +235,16 @@ Resources:
     Properties:
       RouteTableId:
         Fn::ImportValue: !Sub "DC1-${ParentStack}-PrivateRouteTable"
+      DestinationCidrBlock: 10.0.0.0/11
+      NetworkInterfaceId:
+        Ref: CSRENI
+  
+  PublicAWSRoute:
+    Type: AWS::EC2::Route
+    DependsOn: CSRENI
+    Properties:
+      RouteTableId:
+        Fn::ImportValue: !Sub "DC1-${ParentStack}-PublicRouteTable"
       DestinationCidrBlock: 10.0.0.0/11
       NetworkInterfaceId:
         Ref: CSRENI
@@ -394,7 +404,9 @@ Outputs:
     Value:
       !Join [
         "",
-        ["ssh -i ~/.ssh/", Ref: "KeyPair", ".pem ec2-user@", Ref: "CSRIP"],
+        ["ssh -i ~/.ssh/", Ref: "KeyPair", ".pem ec2-user@", GetAtt: CSRENI.PrimaryPrivateIpAddress],
       ]
     Export:
       Name: !Sub "DC1-${AWS::StackName}-VPC"
+
+
