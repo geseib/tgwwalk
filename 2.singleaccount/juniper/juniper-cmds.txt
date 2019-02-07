@@ -1,0 +1,14 @@
+#SRX routing
+set interfaces ge-0/0/0 unit 0 family inet addres 10.4.3.183/21
+
+set routing-instances aws instance-type virtual-router
+
+set routing-instances aws interface ge-0/0/0.0
+set routing-instances aws interface st0.1
+set routing-instances aws routing-options static route 0.0.0.0/0 next-hop 10.4.0.1
+set routing-instances aws routing-options static route 10.4.0.0/16 next-hop 10.4.0.1
+set security zones security-zone untrust interfaces ge-0/0/0.0
+
+
+set system root-authentication encrypted-password
+

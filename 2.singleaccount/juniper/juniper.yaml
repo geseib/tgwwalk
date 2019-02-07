@@ -1,7 +1,6 @@
 ---
-AWSTemplateFormatVersion: "2010-09-09"
-Description:
-  "(SO0001) - This template creates a Juniper vSRX instance ***NOTE***
+AWSTemplateFormatVersion: '2010-09-09'
+Description: "(SO0001) - This template creates a Juniper vSRX instance ***NOTE***
   You must first subscribe to the appropriate Juniper VSRX marketplace AMI from the
   before you launch this template. Version 3"
 Parameters:
@@ -14,49 +13,52 @@ Parameters:
     Type: String
     Default: 0.0.0.0/0
   TerminationProtection:
-    Description:
-      Enable termination protection on the VSRX EC2 instances to avoid
+    Description: Enable termination protection on the VSRX EC2 instances to avoid
       accidential VSRX termination?
     Type: String
-    Default: "Yes"
+    Default: 'Yes'
     AllowedValues:
-      - "Yes"
-      - "No"
-
+    - 'Yes'
+    - 'No'
   ParentStack:
     Description: CIDR block for vSRX VPC.
     Type: String
     Default: TGW2
-
+  PubSubnet1:
+    Description: Address range for vSRX VPC management subnet.
+    Type: String
+    Default: 200.0.254.0/24
+  PubSubnet2:
+    Description: Address range for vSRX VPC data subnet to be created in AZ1.
+    Type: String
+    Default: 200.0.1.0/24
   VSRXType:
     Description: Virtual machine size required for VSRX instances.
     Type: String
-    Default: C4.2Xlarge
+    Default: C4.Xlarge
     AllowedValues:
-      - C4.Xlarge
-      - C4.2Xlarge
-
+    - C4.Xlarge
 Conditions:
   EnableTerm:
     Fn::Equals:
-      - Ref: TerminationProtection
-      - "Yes"
+    - Ref: TerminationProtection
+    - 'Yes'
 Metadata:
   AWS::CloudFormation::Interface:
     ParameterGroups:
-      - Label:
-          default: Juniper VSRX Configuration
-        Parameters:
-          - VSRXType
-          - KeyName
-          - TerminationProtection
-      - Label:
-          default: Network Configuration
-        Parameters:
-          - VpcCidr
-          - AllowedSshIpAddress
-          - PubSubnet1
-          - PubSubnet2
+    - Label:
+        default: Juniper VSRX Configuration
+      Parameters:
+      - VSRXType
+      - KeyName
+      - TerminationProtection
+    - Label:
+        default: Network Configuration
+      Parameters:
+      - VpcCidr
+      - AllowedSshIpAddress
+      - PubSubnet1
+      - PubSubnet2
     ParameterLabels:
       AllowedSshIpAddress:
         default: Allowed IP Address to SSH from
@@ -75,11 +77,11 @@ Metadata:
 Mappings:
   JunipervSRXAMI:
     us-east-1:
-      byol: ami-4ca1fc37
+      byol: ami-40058d3a
     us-east-2:
-      byol: ami-00230365
+      byol: ami-e6a18983
     us-west-2:
-      byol: ami-3542584c
+      byol: ami-cddd71b5
     us-west-1:
       byol: ami-9186aff1
     ca-central-1:
@@ -89,7 +91,7 @@ Mappings:
     eu-west-2:
       byol: ami-d76f7eb3
     eu-central-1:
-      byol: ami-5bdf7334
+      byol: ami-f8fd7f97
     ap-south-1:
       byol: ami-26f68e49
     ap-southeast-1:
@@ -102,7 +104,6 @@ Mappings:
       byol: ami-2bbe6745
     sa-east-1:
       byol: ami-0656216a
-
   PrefixListIdMap:
     ap-south-1:
       s3: pl-78a54011
@@ -131,37 +132,50 @@ Mappings:
   vSRXInstance:
     C4.Xlarge:
       Type: c4.xlarge
-      Bandwidth: "500000"
+      Bandwidth: '500000'
 Resources:
+  vSRXEip11:
+    Type: AWS::EC2::EIP
+    Properties:
+      Domain: vpc
   vSRXEip12:
     Type: AWS::EC2::EIP
     Properties:
       Domain: vpc
+  AssociateEIP11:
+    Type: AWS::EC2::EIPAssociation
+    Properties:
+      AllocationId:
+        Fn::GetAtt:
+        - vSRXEip11
+        - AllocationId
+      NetworkInterfaceId:
+        Ref: vSRXInterface11
   AssociateEIP12:
     Type: AWS::EC2::EIPAssociation
     Properties:
       AllocationId:
         Fn::GetAtt:
-          - vSRXEip12
-          - AllocationId
+        - vSRXEip12
+        - AllocationId
       NetworkInterfaceId:
         Ref: vSRXInterface12
   vSRXInterface11:
     Type: AWS::EC2::NetworkInterface
     Properties:
       Description: vSRXRevenueInterface1
-      SourceDestCheck: "false"
+      SourceDestCheck: 'false'
       GroupSet:
-        - Ref: VSRXSecurityGroup
+      - Ref: VSRXSecurityGroup
       SubnetId:
         Fn::ImportValue: !Sub "DC1-${ParentStack}-PrivateSubnetA"
   vSRXInterface12:
     Type: AWS::EC2::NetworkInterface
     Properties:
       Description: vSRXRevenueInterface1
-      SourceDestCheck: "false"
+      SourceDestCheck: 'false'
       GroupSet:
-        - Ref: VSRXSecurityGroup
+      - Ref: VSRXSecurityGroup
       SubnetId:
         Fn::ImportValue: !Sub "DC1-${ParentStack}-PublicSubnetA"
   VpcvSRX1:
@@ -171,31 +185,31 @@ Resources:
     Properties:
       InstanceType:
         Fn::FindInMap:
-          - vSRXInstance
-          - Ref: VSRXType
-          - Type
+        - vSRXInstance
+        - Ref: VSRXType
+        - Type
       KeyName:
         Ref: KeyName
       DisableApiTermination:
         Fn::If:
-          - EnableTerm
-          - true
-          - false
+        - EnableTerm
+        - true
+        - false
       ImageId:
         Fn::FindInMap:
-          - JunipervSRXAMI
-          - Ref: AWS::Region
-          - byol
+        - JunipervSRXAMI
+        - Ref: AWS::Region
+        - byol
       NetworkInterfaces:
-        - NetworkInterfaceId:
-            Ref: vSRXInterface11
-          DeviceIndex: "0"
-        - NetworkInterfaceId:
-            Ref: vSRXInterface12
-          DeviceIndex: "1"
+      - NetworkInterfaceId:
+          Ref: vSRXInterface11
+        DeviceIndex: '0'
+      - NetworkInterfaceId:
+          Ref: vSRXInterface12
+        DeviceIndex: '1'
       Tags:
-        - Key: Name
-          Value: VSRX1
+      - Key: Name
+        Value: VSRX1
 
   VSRXSecurityGroup:
     Type: AWS::EC2::SecurityGroup
@@ -204,25 +218,25 @@ Resources:
       VpcId:
         Fn::ImportValue: !Sub "DC1-${ParentStack}-VPC"
       SecurityGroupIngress:
-        - IpProtocol: tcp
-          FromPort: "22"
-          ToPort: "22"
-          CidrIp:
-            Ref: AllowedSshIpAddress
-        - IpProtocol: icmp
-          FromPort: "8"
-          ToPort: "-1"
-          CidrIp:
-            Ref: AllowedSshIpAddress
+      - IpProtocol: tcp
+        FromPort: '22'
+        ToPort: '22'
+        CidrIp:
+          Ref: AllowedSshIpAddress
+      - IpProtocol: icmp
+        FromPort: '8'
+        ToPort: "-1"
+        CidrIp:
+          Ref: AllowedSshIpAddress
       SecurityGroupEgress:
-        - IpProtocol: "-1"
-          FromPort: "0"
-          ToPort: "65535"
-          CidrIp: 0.0.0.0/0
+      - IpProtocol: "-1"
+        FromPort: '0'
+        ToPort: '65535'
+        CidrIp: 0.0.0.0/0
 Outputs:
   VSRXIPAddress:
     Description: Management IP Address for VSRX
     Value:
       Fn::GetAtt:
-        - VpcvSRX1
-        - PrivateIp
+      - VpcvSRX1
+      - PublicIp

@@ -22,20 +22,24 @@ Parameters:
     AllowedValues:
       - "Yes"
       - "No"
-
   ParentStack:
     Description: CIDR block for vSRX VPC.
     Type: String
     Default: TGW2
-
+  PubSubnet1:
+    Description: Address range for vSRX VPC management subnet.
+    Type: String
+    Default: 200.0.254.0/24
+  PubSubnet2:
+    Description: Address range for vSRX VPC data subnet to be created in AZ1.
+    Type: String
+    Default: 200.0.1.0/24
   VSRXType:
     Description: Virtual machine size required for VSRX instances.
     Type: String
-    Default: C4.2Xlarge
+    Default: C4.Xlarge
     AllowedValues:
       - C4.Xlarge
-      - C4.2Xlarge
-
 Conditions:
   EnableTerm:
     Fn::Equals:
