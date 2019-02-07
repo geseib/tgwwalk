@@ -409,8 +409,8 @@ While the CloudFormation Template created attachments to the VPCs and route tabl
 
 1. Repeat the above step for the following route tables:
 
-- NP2-_stack_name_-Private
-- P1-_stack_name_-Private
+   - NP2-_stack_name_-Private
+   - P1-_stack_name_-Private
 
 1. For the **DCS1-_stack_name_-Public** and **DCS1-_stack_name_-Private** where our NAT Gateway is, we need a special route. We already have a default route pointed at the Internet Gateway(IGW) for the public and to the Nat Gateway(NGW) for the private to get to the internet, so we need a more specific entry to route internally. Lets use the rfc 1918 10.0.0.0/8 CIDR as that can only be internal and allows for future expansion without changes. Follow the steps above for both Route tables. Be sure not to alter the **0.0.0.0/0** route pointed to the IGW org NGW for these route tables.
 
@@ -420,7 +420,7 @@ While the CloudFormation Template created attachments to the VPCs and route tabl
 
 1. From the menu on the left, Scroll down and select **Instances**.
 
-1. In the main pane, select an EC2 instance from the list and copy it ip address down. Repeat for as many as you would like to test connectivity. We want to test connectivity to the P1 server. Remember, we do not want our non prod instances to be able to reach our production servers or vice-versa.
+1. In the main pane, select the NP1 EC2 instance from the list and copy its ip address down. You can repeat for other servers (NP2, P1, and DC1) if you want to test connectivity to other VPCs as well. First, we want to test connectivity to the P1 server. Remember, we do not want our non prod instances to be able to reach our production servers or vice-versa.
 
 - You can also get a list of IPs using the AWS CLI which you can run from the Cloud9 Instance. Here's one that extracts out all of them. The 10.16.x.x is the NP1, the 10.8.x.x is the P1 instance.
 
@@ -460,12 +460,15 @@ rtt min/avg/max/mdev = 0.673/0.824/1.096/0.130 ms
 
 1. You can also verify Internet access by using the curl command on the NP1, NP2 or P1 (the Datacenter Server wont use the Transit Gateway to get to the internet, but should still work). If you curl https://cloudformation.us-east-1.amazonaws.com it should return healthy.
 
-1. If you tested between the P1 server and a NP1 or NP2 server, you should have also seen a reply ping. But that's not what we wanted. Look at the VPC route table and the Associated Transit Gateway Route table (_for P1 this should be Blue, for NP1 or NP2 this should be Red_) Follow the logic to understand what's going on.
+## Routing Boundaries
+
+If you tested between the P1 server and a NP1 or NP2 server, you should have also seen a reply ping. But that's **not** what we wanted. Look at the VPC route table and the Associated Transit Gateway Route table (_for P1 this should be Blue, for NP1 or NP2 this should be Red_) Follow the logic to understand what's going on. See if see whats causing the issue, before looking below to solve it.
 
  <details>
    <summary>SPOLIER Fixing Mysterious Prod to Non-Prod routing</summary><p>
 
       While we do not have a direct route between the Production and Non-Production VPCs we do have a gateway through the NAT Gateway in the **Datacenter Services VPC**. Let's fix this through a routing mechanism called Blackhole routing (sometimes referred to as null routing).
+      This is where designing our IP address space pays off. We can now use sammary route to easily wall off part of our network.
 
 1. In the AWS Management Console choose **Services** then select **VPC**.
 
