@@ -27,9 +27,9 @@ Run CloudFormation template 3.tgw-dns.yaml to deploy the Bind server in the Data
 
 1. Make sure **Template is ready** is selected from Prepare template options.
 
-1. At the **Prerequisite - Prepare template** screen, for **template source** select **Upload a template file** and click **Choose file** from **Upload a Template file**. from your local files select **3.tgw-dns.yaml** and click **Open**.
+1. At the **Create stack** screen, for **Template source** select **Upload a template file** and click **Choose file** from **Upload a Template file**. from your local files select **3.tgw-dns.yaml** and click **Open**.
 
-1. Back at the **Prerequisite - Prepare template** screen, clcik **Next** in the lower right.
+1. Back at the **Create stack** screen, clcik **Next** in the lower right.
 
 1. For the **Specify stack details** give the stack a name, enter the name of your first stack (must be entered exactly to work), and select DNS compliant domain name, such as **kneetoe.com**. Click **Next**.
    ![Stack Parameters](../images/createStack-DNSparameters.png)

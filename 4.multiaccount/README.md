@@ -60,9 +60,9 @@ Run CloudFormation template 4.tgw-vpcs.yaml to deploy the VPC in the Same Region
 
 1. Make sure **Template is ready** is selected from Prepare template options.
 
-1. At the **Prerequisite - Prepare template** screen, for **template source** select **Upload a template file** and click **Choose file** from **Upload a Template file**. from your local files select **1.tgw-vpcs.yaml** and click **Open**.
+1. At the **Create stack** screen, for **Template source** select **Upload a template file** and click **Choose file** from **Upload a Template file**. from your local files select **1.tgw-vpcs.yaml** and click **Open**.
 
-1. Back at the **Prerequisite - Prepare template** screen, click **Next** in the lower right.
+1. Back at the **Create stack** screen, click **Next** in the lower right.
 
 1. For the **Specify stack details** give the stack a name and Select two Availability Zones (AZs) to deploy to. _We will be deploying all of the VPCs in the same AZs, but that is not required by AWS Transit Gateway_. Click **Next**.
    ![Stack Parameters](../images/createStack-CROSSparameters.png)
@@ -191,4 +191,4 @@ We will spin up an EC2 instance in the other Accounts NP2 VPC and test ping thei
 
 # Congratulations
 
-## You now have **completed** this Workshop. Return to the Overview to read how to [clean up the accounts](..).
+## You now have **completed** this Workshop. Return to the Overview to read how to [clean up the accounts](../).
