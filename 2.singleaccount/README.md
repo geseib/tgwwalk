@@ -112,7 +112,7 @@ In a real production environment we would setup a second router for redundancy a
 - For **Inside IP CIDR for Tunnel 1** use **169.254.10.0/30** for CIDR.
 
 - For **Pre-Shared Key for Tunnel 1** use **awsamazon**
-- For **Inside IP CIDR for Tunnel 2** use **169.254.10.0/30**for CIDR.
+- For **Inside IP CIDR for Tunnel 2** use **169.254.11.0/30**for CIDR.
 - For **Pre-Shared Key for Tunnel 2** use **awsamazon**
 - Once the page is filled out, click **Create attachment** at the bottom right.
   ![Create VPN Attachment](../images/tgw-createvpnattach.png)
@@ -274,7 +274,7 @@ Bandwidth scaling and High Availability are built into the Transit Gateway inher
 - For **Inside IP CIDR for Tunnel 1** use **169.254.12.0/30** for CIDR. _Note: we are different addresses from the previous VPN_
 
 - For **Pre-Shared Key for Tunnel 1** use **awsamazon**
-- For **Inside IP CIDR for Tunnel 2** use **169.254.12.0/30** for CIDR. _Note: we are different addresses from the previous VPN_
+- For **Inside IP CIDR for Tunnel 2** use **169.254.13.0/30** for CIDR. _Note: we are different addresses from the previous VPN_
 - For **Pre-Shared Key for Tunnel 2** use **awsamazon**
 - Once the page is filled out, click **Create attachment** at the bottom right.
   ![Create VPN Attachment](../images/tgw-create2ndvpnattach.png)
