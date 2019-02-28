@@ -77,7 +77,7 @@ AWS Transit Gateway is a service that enables customers to connect their Amazon 
 
 # Modules
 
-This workshop is broken up into multiple modules. You must complete each module before proceeding to the next. The first module deploys the VPCs, then second module builds out the VPN connectivity and the transit Gateway connecting the VPCs together, the next model build DNS integration between the Datacenter and the VPCs using Route53 Resolver, and in the last module we connect a VPC from another AWS account.
+This workshop is broken up into multiple modules. You must complete each module before proceeding to the next. The first module deploys the VPCs, then second module builds out the VPN connectivity and the transit Gateway connecting the VPCs together, the next module builds DNS integration between the Datacenter and the VPCs using Route53 Resolver, and in the last module we connect a VPC from another AWS account to our network.
 
 ## 1. [Setup the Environment](./1.setup) - 15 mins
 
