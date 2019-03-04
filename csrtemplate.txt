@@ -63,7 +63,7 @@ router bgp 65001
 ! in the routing table of the device with a valid next-hop.
     Network 10.4.0.0 mask 255.255.0.0
   exit
-ip route 10.4.0.0 255.255.0.0 gig1
+ip route 10.4.0.0 255.255.0.0 gig1 10.4.0.1
 
     crypto isakmp policy 201
     encryption aes 128
