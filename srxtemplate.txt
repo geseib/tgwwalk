@@ -1,4 +1,3 @@
-
 set system root-authentication encrypted-password $5$jdfvppXR$0AKg0uNvkO8L8y1moU157mKVCKhRR.8RdSHOkxUt.R3
 
 set interfaces ge-0/0/0 unit 0 family inet addres 10.4.8.11/21
@@ -61,12 +60,15 @@ set security zones security-zone untrust host-inbound-traffic system-services ik
 set security zones security-zone trust host-inbound-traffic protocols bgp
 
 set security flow tcp-mss ipsec-vpn mss 1379
- 
-set policy-options policy-statement EXPORT-DEFAULT term default from route-filter 10.4.0.0/16 exact                                                               
-set policy-options policy-statement EXPORT-DEFAULT term default then accept     
-set policy-options policy-statement EXPORT-DEFAULT term reject then reject
+
+set routing-options forwarding-table export loadbal
+set policy-options policy-statement loadbal then load-balance per-packet
+
+set policy-options policy-statement EXPORT-DC term default from route-filter 10.4.0.0/16 exact                                                               
+set policy-options policy-statement EXPORT-DC term default then accept     
+set policy-options policy-statement EXPORT-DC term reject then reject
 set routing-instances aws protocols bgp group ebgp type external
-set routing-instances aws protocols bgp group ebgp neighbor 169.254.10.1 export EXPORT-DEFAULT 
+set routing-instances aws protocols bgp group ebgp neighbor 169.254.10.1 export EXPORT-DC 
 set routing-instances aws protocols bgp group ebgp neighbor 169.254.10.1 peer-as 65000
 set routing-instances aws protocols bgp group ebgp neighbor 169.254.10.1 hold-time 30
 set routing-instances aws protocols bgp group ebgp neighbor 169.254.10.1 local-as 65001
@@ -114,11 +116,13 @@ set security zones security-zone trust host-inbound-traffic protocols bgp
 
 set security flow tcp-mss ipsec-vpn mss 1379
  
-set routing-instances aws protocols bgp group ebgp neighbor 169.254.11.1 export EXPORT-DEFAULT 
+set routing-instances aws protocols bgp group ebgp neighbor 169.254.11.1 export EXPORT-DC 
 set routing-instances aws protocols bgp group ebgp neighbor 169.254.11.1 peer-as 65000
 set routing-instances aws protocols bgp group ebgp neighbor 169.254.11.1 hold-time 30
 set routing-instances aws protocols bgp group ebgp neighbor 169.254.11.1 local-as 65001
 
-
-
+set security policies from-zone trust to-zone trust policy permit-any match source-address any
+set security policies from-zone trust to-zone trust policy permit-any match destination-address any
+set security policies from-zone trust to-zone trust policy permit-any match application any
+set security policies from-zone trust to-zone trust policy permit-any then permit
 
